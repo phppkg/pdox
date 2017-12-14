@@ -9,7 +9,6 @@
 namespace Inhere\LiteDb;
 
 use Inhere\Exceptions\UnknownMethodException;
-use Inhere\Library\Helpers\DsnHelper;
 use Inhere\Library\Traits\LiteConfigTrait;
 use Inhere\Library\Traits\LiteEventTrait;
 use PDO;
