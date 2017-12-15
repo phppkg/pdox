@@ -9,30 +9,15 @@
 namespace Inhere\LiteDb;
 
 use Inhere\Exceptions\UnknownMethodException;
-use Inhere\Library\Traits\LiteConfigTrait;
-use Inhere\Library\Traits\LiteEventTrait;
 use PDO;
 use PDOStatement;
 
 /**
- * Class PdoClient
+ * Class ExtendedPdo - for mysql, sqlite, pgSql database
  * @package Inhere\LiteDb
  */
-class PdoClient
+class ExtendedPdo extends AbstractLiteDb
 {
-    use LiteEventTrait, LiteConfigTrait;
-
-    //
-    const CONNECT = 'connect';
-    const DISCONNECT = 'disconnect';
-
-    // will provide ($sql, $type, $data)
-    // $sql - executed SQL
-    // $type - operate type.  e.g 'insert'
-    // $data - data
-    const BEFORE_EXECUTE = 'beforeExecute';
-    const AFTER_EXECUTE = 'afterExecute';
-
     /** @var PDO */
     protected $pdo;
 
@@ -111,12 +96,13 @@ class PdoClient
     ];
 
     /**
-     * @param array $config
-     * @return static
+     * Is this driver supported.
+     * @param string $driver
+     * @return bool
      */
-    public static function make(array $config = [])
+    public static function isSupported(string $driver)
     {
-        return new static($config);
+        return \in_array($driver, \PDO::getAvailableDrivers(), true);
     }
 
     /**
@@ -126,10 +112,10 @@ class PdoClient
     public function __construct(array $config = [])
     {
         if (!class_exists(\PDO::class, false)) {
-            throw new \RuntimeException("The php extension 'redis' is required.");
+            throw new \RuntimeException("The php extension 'pdo' is required.");
         }
 
-        $this->setConfig($config);
+        parent::__construct($config);
 
         // init something...
         $this->debug = (bool)$this->config['debug'];
@@ -148,7 +134,7 @@ class PdoClient
     }
 
     /**
-     * @return static
+     * @return $this
      * @throws \RuntimeException
      * @throws \PDOException
      */
@@ -183,6 +169,9 @@ class PdoClient
         return $this;
     }
 
+    /**
+     * reconnect
+     */
     public function reconnect()
     {
         $this->pdo = null;
@@ -196,14 +185,6 @@ class PdoClient
     {
         $this->fire(self::DISCONNECT, [$this]);
         $this->pdo = null;
-    }
-
-    /**
-     * __destruct
-     */
-    public function __destruct()
-    {
-        $this->disconnect();
     }
 
     /**
@@ -1541,16 +1522,6 @@ class PdoClient
     public static function getAvailableDrivers()
     {
         return PDO::getAvailableDrivers();
-    }
-
-    /**
-     * Is this driver supported.
-     * @param string $driver
-     * @return bool
-     */
-    public static function isSupported(string $driver)
-    {
-        return \in_array($driver, \PDO::getAvailableDrivers(), true);
     }
 
     /**
