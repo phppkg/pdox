@@ -15,15 +15,15 @@ namespace Inhere\LiteDb;
 interface LiteDatabaseInterface
 {
     // events
-    const CONNECT = 'connect';
-    const DISCONNECT = 'disconnect';
+    const CONNECT = 'db.connect';
+    const DISCONNECT = 'db.disconnect';
 
     // will provide ($sql, $type, $data)
     // $sql - executed SQL
     // $type - operate type.  e.g 'insert'
     // $data - data
-    const BEFORE_EXECUTE = 'beforeExecute';
-    const AFTER_EXECUTE = 'afterExecute';
+    const BEFORE_EXECUTE = 'db.beforeExecute';
+    const AFTER_EXECUTE = 'db.afterExecute';
 
     /**
      * connect to db server
