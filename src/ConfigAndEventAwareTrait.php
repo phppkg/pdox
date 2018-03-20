@@ -23,7 +23,7 @@ trait ConfigAndEventAwareTrait
      * @param callable $cb event callback
      * @param bool $replace replace exists's event cb
      */
-    public function on($name, callable $cb, $replace = false)
+    public function on($name, callable $cb, $replace = false): void
     {
         if ($replace || !isset($this->_events[$name])) {
             $this->_events[$name] = $cb;
@@ -67,13 +67,13 @@ trait ConfigAndEventAwareTrait
      */
     public function setConfig(array $config, $merge = true)
     {
-        $this->config = $merge ? array_merge($this->config, $config) : $config;
+        $this->config = $merge ? \array_merge($this->config, $config) : $config;
 
         return $this;
     }
 
     /**
-     * @param callable $cb
+     * @param callable|mixed $cb
      * @param array ...$args
      * @return mixed
      */
@@ -81,12 +81,12 @@ trait ConfigAndEventAwareTrait
     {
         if (\is_string($cb)) {
             // function
-            if (strpos($cb, '::') === false) {
+            if (\strpos($cb, '::') === false) {
                 return $cb(...$args);
             }
 
             // ClassName::method
-            $cb = explode('::', $cb, 2);
+            $cb = \explode('::', $cb, 2);
         } elseif (\is_object($cb) && method_exists($cb, '__invoke')) {
             return $cb(...$args);
         }

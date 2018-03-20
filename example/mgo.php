@@ -6,4 +6,4 @@
  * Time: 23:56
  */
 
-require dirname(__DIR__) . '/tests/boot.php';
+require dirname(__DIR__) . '/test/boot.php';

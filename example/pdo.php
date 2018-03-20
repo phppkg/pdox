@@ -9,7 +9,7 @@
 
 use Inhere\LiteDb\ExtendedPdo;
 
-require dirname(__DIR__) . '/tests/boot.php';
+require dirname(__DIR__) . '/test/boot.php';
 
 $db = ExtendedPdo::make([
     'debug' => 1,

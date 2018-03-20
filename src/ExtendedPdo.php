@@ -8,7 +8,6 @@
 
 namespace Inhere\LiteDb;
 
-use Inhere\Exceptions\UnknownMethodException;
 use PDO;
 use PDOStatement;
 
@@ -135,6 +134,7 @@ class ExtendedPdo extends AbstractLiteDb
 
     /**
      * @return $this
+     * @throws \LogicException
      * @throws \RuntimeException
      * @throws \PDOException
      */
@@ -171,6 +171,8 @@ class ExtendedPdo extends AbstractLiteDb
 
     /**
      * reconnect
+     * @throws \RuntimeException
+     * @throws \PDOException
      */
     public function reconnect()
     {
@@ -191,7 +193,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @param $name
      * @param array $arguments
      * @return mixed
-     * @throws UnknownMethodException
+     * @throws \InvalidArgumentException
      * @throws \PDOException
      * @throws \RuntimeException
      */
@@ -199,9 +201,9 @@ class ExtendedPdo extends AbstractLiteDb
     {
         $this->connect();
 
-        if (!method_exists($this->pdo, $name)) {
+        if (!\method_exists($this->pdo, $name)) {
             $class = \get_class($this);
-            throw new UnknownMethodException("Class '{$class}' does not have a method '{$name}'");
+            throw new \InvalidArgumentException("Class '{$class}' does not have a method '{$name}'");
         }
 
         return $this->pdo->$name(...$arguments);
@@ -266,7 +268,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @return array
      * @throws \RuntimeException
      */
-    public function findOne(string $from, $wheres = 1, $select = '*', array $options = [])
+    public function findOne(string $from, $wheres = 1, $select = '*', array $options = []): array
     {
         $options['select'] = $this->qns($select ?: '*');
         $options['from'] = $this->qn($from);
@@ -308,7 +310,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @return array
      * @throws \RuntimeException
      */
-    public function findAll(string $from, $wheres = 1, $select = '*', array $options = [])
+    public function findAll(string $from, $wheres = 1, $select = '*', array $options = []): array
     {
         $options['select'] = $this->qns($select ?: '*');
         $options['from'] = $this->qn($from);
@@ -454,7 +456,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @return int
      * @throws \RuntimeException
      */
-    public function count(string $table, $wheres)
+    public function count(string $table, $wheres): int
     {
         list($where, $bindings) = $this->handleWheres($wheres);
         $sql = "SELECT COUNT(*) AS total FROM {$table} WHERE {$where}";
@@ -474,7 +476,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @param array $bindings
      * @return int
      */
-    public function exists($statement, array $bindings = [])
+    public function exists($statement, array $bindings = []): int
     {
         $sql = sprintf('SELECT EXISTS(%s) AS `exists`', $statement);
 
@@ -492,7 +494,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @param array $bindings
      * @return int
      */
-    public function fetchAffected($statement, array $bindings = [])
+    public function fetchAffected($statement, array $bindings = []): int
     {
         $sth = $this->execute($statement, $bindings);
         $affected = $sth->rowCount();
@@ -585,16 +587,16 @@ class ExtendedPdo extends AbstractLiteDb
      * @param string $class a class name or fetch style name.
      * @return array
      */
-    public function fetchAll(string $statement, array $bindings = [], $indexKey = null, $class = 'assoc')
+    public function fetchAll(string $statement, array $bindings = [], $indexKey = null, $class = 'assoc'): array
     {
         // $sth = $this->execute($statement, $bindings);
         // $result = $sth->fetchAll(PDO::FETCH_ASSOC);
 
-        if (strtolower($class) === 'value') {
+        if (\strtolower($class) === 'value') {
             return $this->fetchValues($statement, $bindings, $indexKey);
         }
 
-        if (strtolower($class) === 'assoc') {
+        if (\strtolower($class) === 'assoc') {
             return $this->fetchAssocs($statement, $bindings, $indexKey);
         }
 
@@ -604,7 +606,7 @@ class ExtendedPdo extends AbstractLiteDb
     /**
      * {@inheritdoc}
      */
-    public function fetchAssocs(string $statement, array $bindings = [], $indexKey = null)
+    public function fetchAssocs(string $statement, array $bindings = [], $indexKey = null): array
     {
         $data = [];
         $sth = $this->execute($statement, $bindings);
@@ -626,7 +628,7 @@ class ExtendedPdo extends AbstractLiteDb
     /**
      * {@inheritdoc}
      */
-    public function fetchValues(string $statement, array $bindings = [], $indexKey = null)
+    public function fetchValues(string $statement, array $bindings = [], $indexKey = null): array
     {
         $data = [];
         $sth = $this->execute($statement, $bindings);
@@ -647,7 +649,7 @@ class ExtendedPdo extends AbstractLiteDb
     /**
      * {@inheritdoc}
      */
-    public function fetchColumns(string $statement, array $bindings = [], int $columnNum = 0)
+    public function fetchColumns(string $statement, array $bindings = [], int $columnNum = 0): array
     {
         $sth = $this->execute($statement, $bindings);
         $column = $sth->fetchAll(PDO::FETCH_COLUMN, $columnNum);
@@ -660,7 +662,7 @@ class ExtendedPdo extends AbstractLiteDb
     /**
      * {@inheritdoc}
      */
-    public function fetchObjects(string $statement, array $bindings = [], $class = 'stdClass', $indexKey = null, array $args = [])
+    public function fetchObjects(string $statement, array $bindings = [], $class = 'stdClass', $indexKey = null, array $args = []): array
     {
         $data = [];
         $sth = $this->execute($statement, $bindings);
@@ -699,7 +701,7 @@ class ExtendedPdo extends AbstractLiteDb
      *
      * @return array
      */
-    public function fetchFuns(callable $func, string $statement, array $bindings = [])
+    public function fetchFuns(callable $func, string $statement, array $bindings = []): array
     {
         $sth = $this->execute($statement, $bindings);
         $result = $sth->fetchAll(PDO::FETCH_FUNC, $func);
@@ -712,7 +714,7 @@ class ExtendedPdo extends AbstractLiteDb
     /**
      * {@inheritdoc}
      */
-    public function fetchGroups(string $statement, array $bindings = [], $style = PDO::FETCH_COLUMN)
+    public function fetchGroups(string $statement, array $bindings = [], $style = PDO::FETCH_COLUMN): array
     {
         $sth = $this->execute($statement, $bindings);
         $group = $sth->fetchAll(PDO::FETCH_GROUP | $style);
@@ -725,7 +727,7 @@ class ExtendedPdo extends AbstractLiteDb
     /**
      * {@inheritdoc}
      */
-    public function fetchPairs(string $statement, array $bindings = [])
+    public function fetchPairs(string $statement, array $bindings = []): array
     {
         $sth = $this->execute($statement, $bindings);
 
@@ -747,7 +749,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @param int $fetchType
      * @return \Generator
      */
-    public function cursor($statement, array $bindings = [], $fetchType = PDO::FETCH_ASSOC)
+    public function cursor($statement, array $bindings = [], $fetchType = PDO::FETCH_ASSOC): ?\Generator
     {
         $sth = $this->execute($statement, $bindings);
 
@@ -764,7 +766,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @param array $bindings
      * @return \Generator
      */
-    public function yieldAssoc($statement, array $bindings = [])
+    public function yieldAssoc($statement, array $bindings = []): ?\Generator
     {
         $sth = $this->execute($statement, $bindings);
 
@@ -781,7 +783,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @param array $bindings
      * @return \Generator
      */
-    public function yieldAll($statement, array $bindings = [])
+    public function yieldAll($statement, array $bindings = []): ?\Generator
     {
         $sth = $this->execute($statement, $bindings);
 
@@ -797,7 +799,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @param array $bindings
      * @return \Generator
      */
-    public function yieldValue($statement, array $bindings = [])
+    public function yieldValue($statement, array $bindings = []): ?\Generator
     {
         $sth = $this->execute($statement, $bindings);
 
@@ -814,7 +816,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @param int $columnNum
      * @return \Generator
      */
-    public function yieldColumn($statement, array $bindings = [], int $columnNum = 0)
+    public function yieldColumn($statement, array $bindings = [], int $columnNum = 0): ?\Generator
     {
         $sth = $this->execute($statement, $bindings);
 
@@ -836,7 +838,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @param array $args
      * @return \Generator
      */
-    public function yieldObjects($statement, array $bindings = [], $class = 'stdClass', array $args = [])
+    public function yieldObjects($statement, array $bindings = [], $class = 'stdClass', array $args = []): ?\Generator
     {
         $sth = $this->execute($statement, $bindings);
 
@@ -852,7 +854,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @param array $bindings
      * @return \Generator
      */
-    public function yieldPairs($statement, array $bindings = [])
+    public function yieldPairs($statement, array $bindings = []): ?\Generator
     {
         $sth = $this->execute($statement, $bindings);
 
@@ -871,8 +873,10 @@ class ExtendedPdo extends AbstractLiteDb
      * @param string $statement
      * @param array $params
      * @return PDOStatement
+     * @throws \RuntimeException
+     * @throws \PDOException
      */
-    public function execute($statement, array $params = [])
+    public function execute($statement, array $params = []): PDOStatement
     {
         // trigger before event
         $this->fire(self::BEFORE_EXECUTE, [$statement, $params, 'execute']);
@@ -893,7 +897,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @throws \PDOException
      * @throws \RuntimeException
      */
-    public function prepareWithBindings($statement, array $params = [])
+    public function prepareWithBindings($statement, array $params = []): PDOStatement
     {
         $this->connect();
         $statement = $this->replaceTablePrefix($statement);
@@ -923,7 +927,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @throws \PDOException
      * @throws \RuntimeException
      */
-    public function transactional(callable $func)
+    public function transactional(callable $func): ?bool
     {
         if (!\is_callable($func)) {
             throw new \InvalidArgumentException('Expected argument of type "callable", got "' . \gettype($func) . '"');
@@ -947,7 +951,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @param PDOStatement $sth
      * @param array|\ArrayIterator $bindings
      */
-    public function bindValues(PDOStatement $sth, $bindings)
+    public function bindValues(PDOStatement $sth, $bindings): void
     {
         foreach ($bindings as $key => $value) {
             $sth->bindValue(
@@ -964,7 +968,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @return bool
      * @throws \RuntimeException
      */
-    protected function bindValue(PDOStatement $sth, $key, $val)
+    protected function bindValue(PDOStatement $sth, $key, $val): bool
     {
         if (\is_int($val)) {
             return $sth->bindValue($key, $val, PDO::PARAM_INT);
@@ -996,7 +1000,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @throws \PDOException
      * @throws \RuntimeException
      */
-    public function ping()
+    public function ping(): bool
     {
         try {
             $this->connect();
@@ -1012,7 +1016,7 @@ class ExtendedPdo extends AbstractLiteDb
 
     /**
      * handle where condition
-     * @param array|string|\Closure $wheres
+     * @param array|string|\Closure|mixed $wheres
      * @example
      * ```
      * ...
@@ -1033,7 +1037,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @return array
      * @throws \RuntimeException
      */
-    public function handleWheres($wheres)
+    public function handleWheres($wheres): array
     {
         if (\is_object($wheres) && $wheres instanceof \Closure) {
             $wheres = $wheres($this);
@@ -1069,11 +1073,11 @@ class ExtendedPdo extends AbstractLiteDb
                     }
 
                     $bool = $val[3] ?? 'AND';
-                    $nodes[] = strtoupper($bool) . ' ' . $this->qn($val[0]) . " {$val[1]} ?";
+                    $nodes[] = \strtoupper($bool) . ' ' . $this->qn($val[0]) . " {$val[1]} ?";
                     $bindings[] = $val[2];
                 } else {
                     $val = trim((string)$val);
-                    $nodes[] = preg_match('/^and |or /i', $val) ? $val : 'AND ' . $val;
+                    $nodes[] = \preg_match('/^and |or /i', $val) ? $val : 'AND ' . $val;
                 }
             }
         }
@@ -1088,7 +1092,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @param array $options
      * @return string
      */
-    public function compileSelect(array $options)
+    public function compileSelect(array $options): string
     {
         return $this->compileNodes(self::SELECT_NODES, $options);
     }
@@ -1100,29 +1104,29 @@ class ExtendedPdo extends AbstractLiteDb
      * @param bool $isBatch
      * @return array
      */
-    public function compileInsert(string $from, array $data, array $columns = [], $isBatch = false)
+    public function compileInsert(string $from, array $data, array $columns = [], $isBatch = false): array
     {
         $bindings = [];
         $table = $this->qn($from);
 
         if (!$isBatch) {
-            $bindings = array_values($data);
-            $nameStr = $this->qns(array_keys($data));
-            $valueStr = '(' . rtrim(str_repeat('?,', \count($data)), ',') . ')';
+            $bindings = \array_values($data);
+            $nameStr = $this->qns(\array_keys($data));
+            $valueStr = '(' . rtrim(\str_repeat('?,', \count($data)), ',') . ')';
         } else {
             if ($columns) {
                 $columnNum = \count($columns);
                 $nameStr = $this->qns($columns);
             } else {
                 $columnNum = \count($data[0]);
-                $nameStr = $this->qns(array_keys($data[0]));
+                $nameStr = $this->qns(\array_keys($data[0]));
             }
 
             $valueStr = '';
-            $rowTpl = '(' . rtrim(str_repeat('?,', $columnNum), ',') . '), ';
+            $rowTpl = '(' . rtrim(\str_repeat('?,', $columnNum), ',') . '), ';
 
             foreach ($data as $row) {
-                $bindings = array_merge($bindings, array_values($row));
+                $bindings = \array_merge($bindings, \array_values($row));
                 $valueStr .= $rowTpl;
             }
 
@@ -1139,7 +1143,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @param array $options
      * @return string
      */
-    public function compileUpdate(array $updates, array &$bindings, array $options)
+    public function compileUpdate(array $updates, array &$bindings, array $options): string
     {
         $nodes = $values = [];
 
@@ -1153,12 +1157,12 @@ class ExtendedPdo extends AbstractLiteDb
         }
 
         $options['set'] = \implode(',', $nodes);
-        $bindings = array_merge($values, $bindings);
+        $bindings = \array_merge($values, $bindings);
 
         return $this->compileNodes(self::UPDATE_NODES, $options);
     }
 
-    public function compileDelete(array $options)
+    public function compileDelete(array $options): string
     {
         return 'DELETE ' . $this->compileNodes(self::DELETE_NODES, $options);
     }
@@ -1168,7 +1172,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @param array $data
      * @return string
      */
-    public function compileNodes(array $commandNodes, array $data)
+    public function compileNodes(array $commandNodes, array $data): string
     {
         $nodes = [];
 
@@ -1214,38 +1218,38 @@ class ExtendedPdo extends AbstractLiteDb
             }
 
             if ($node === 'order') {
-                $nodes[] = 'ORDER BY ' . ($isString ? $val : implode(' ', $val));
+                $nodes[] = 'ORDER BY ' . ($isString ? $val : \implode(' ', $val));
                 continue;
             }
 
-            $nodes[] = strtoupper($node) . ' ' . ($isString ? $val : implode(',', (array)$val));
+            $nodes[] = \strtoupper($node) . ' ' . ($isString ? $val : \implode(',', (array)$val));
         }
 
-        return implode(' ', $nodes);
+        return \implode(' ', $nodes);
     }
 
     /**
      * @param array|string $names
      * @return string
      */
-    public function qns($names)
+    public function qns($names): string
     {
         if (\is_string($names)) {
             $names = trim($names, ', ');
-            $names = strpos($names, ',') ? explode(',', $names) : [$names];
+            $names = \strpos($names, ',') ? \explode(',', $names) : [$names];
         }
 
-        $names = array_map(function ($field) {
+        $names = \array_map(function ($field) {
             return $this->quoteName($field);
         }, $names);
 
-        return implode(',', $names);
+        return \implode(',', $names);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function qn(string $name)
+    public function qn(string $name): string
     {
         return $this->quoteName($name);
     }
@@ -1254,45 +1258,45 @@ class ExtendedPdo extends AbstractLiteDb
      * @param string $name
      * @return string
      */
-    public function quoteName(string $name)
+    public function quoteName(string $name): string
     {
         // field || field as f
-        if (strpos($name, '.') === false) {
+        if (\strpos($name, '.') === false) {
             return $this->quoteSingleName($name);
         }
 
         // t1.field || t1.field as f
-        return implode('.', array_map([$this, 'quoteSingleName'], explode('.', $name)));
+        return \implode('.', \array_map([$this, 'quoteSingleName'], \explode('.', $name)));
     }
 
     /**
      * @param string $name
      * @return string
      */
-    public function quoteSingleName(string $name)
+    public function quoteSingleName(string $name): string
     {
         if ($name === '*') {
             return $name;
         }
 
-        if (stripos($name, ' as ') === false) {
-            if (strpos($name, $this->quoteNamePrefix) !== false) {
-                $name = str_replace($this->quoteNameEscapeChar, $this->quoteNameEscapeReplace, $name);
+        if (\stripos($name, ' as ') === false) {
+            if (\strpos($name, $this->quoteNamePrefix) !== false) {
+                $name = \str_replace($this->quoteNameEscapeChar, $this->quoteNameEscapeReplace, $name);
             }
 
             return $this->quoteNamePrefix . $name . $this->quoteNameSuffix;
         }
 
         // field as f
-        $name = str_ireplace(' as ', '#', $name);
+        $name = \str_ireplace(' as ', '#', $name);
 
-        return implode(' AS ', array_map([$this, 'quoteSingleName'], explode('#', $name)));
+        return \implode(' AS ', \array_map([$this, 'quoteSingleName'], \explode('#', $name)));
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function initQuoteNameChar($driver)
+    protected function initQuoteNameChar($driver): void
     {
         switch ($driver) {
             case 'mysql':
@@ -1319,7 +1323,7 @@ class ExtendedPdo extends AbstractLiteDb
         }
     }
 
-    public function q($value, $type = PDO::PARAM_STR)
+    public function q($value, $type = PDO::PARAM_STR): string
     {
         return $this->quote($value, $type);
     }
@@ -1328,8 +1332,11 @@ class ExtendedPdo extends AbstractLiteDb
      * @param string|array $value
      * @param int $type
      * @return string
+     * @throws \LogicException
+     * @throws \RuntimeException
+     * @throws \PDOException
      */
-    public function quote($value, $type = PDO::PARAM_STR)
+    public function quote($value, $type = PDO::PARAM_STR): string
     {
         $this->connect();
 
@@ -1344,7 +1351,7 @@ class ExtendedPdo extends AbstractLiteDb
             $value[$k] = $this->pdo->quote($v, $type);
         }
 
-        return implode(', ', $value);
+        return \implode(', ', $value);
     }
 
     /********************************************************************************
@@ -1354,10 +1361,11 @@ class ExtendedPdo extends AbstractLiteDb
     /**
      * @param string $statement
      * @return int
+     * @throws \LogicException
      * @throws \PDOException
      * @throws \RuntimeException
      */
-    public function exec($statement)
+    public function exec($statement): int
     {
         $this->connect();
 
@@ -1375,10 +1383,11 @@ class ExtendedPdo extends AbstractLiteDb
     /**
      * {@inheritDoc}
      * @return PDOStatement
+     * @throws \LogicException
      * @throws \PDOException
      * @throws \RuntimeException
      */
-    public function query($statement, ...$fetch)
+    public function query($statement, ...$fetch): PDOStatement
     {
         $this->connect();
 
@@ -1397,10 +1406,11 @@ class ExtendedPdo extends AbstractLiteDb
      * @param string $statement
      * @param array $options
      * @return PDOStatement
+     * @throws \LogicException
      * @throws \PDOException
      * @throws \RuntimeException
      */
-    public function prepare($statement, array $options = [])
+    public function prepare($statement, array $options = []): PDOStatement
     {
         $this->connect();
         $this->log($statement, $options);
@@ -1410,10 +1420,11 @@ class ExtendedPdo extends AbstractLiteDb
 
     /**
      * {@inheritDoc}
+     * @throws \LogicException
      * @throws \PDOException
      * @throws \RuntimeException
      */
-    public function beginTransaction()
+    public function beginTransaction(): bool
     {
         $this->connect();
 
@@ -1422,10 +1433,11 @@ class ExtendedPdo extends AbstractLiteDb
 
     /**
      * {@inheritDoc}
+     * @throws \LogicException
      * @throws \RuntimeException
      * @throws \PDOException
      */
-    public function inTransaction()
+    public function inTransaction(): bool
     {
         $this->connect();
 
@@ -1437,7 +1449,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @throws \PDOException
      * @throws \RuntimeException
      */
-    public function commit()
+    public function commit(): bool
     {
         $this->connect();
 
@@ -1449,7 +1461,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @throws \PDOException
      * @throws \RuntimeException
      */
-    public function rollBack()
+    public function rollBack(): bool
     {
         $this->connect();
 
@@ -1473,7 +1485,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @throws \PDOException
      * @throws \RuntimeException
      */
-    public function errorInfo()
+    public function errorInfo(): array
     {
         $this->connect();
 
@@ -1485,7 +1497,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @throws \PDOException
      * @throws \RuntimeException
      */
-    public function lastInsertId($name = null)
+    public function lastInsertId($name = null): string
     {
         $this->connect();
 
@@ -1509,7 +1521,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @throws \PDOException
      * @throws \RuntimeException
      */
-    public function setAttribute($attribute, $value)
+    public function setAttribute($attribute, $value): bool
     {
         $this->connect();
 
@@ -1519,7 +1531,7 @@ class ExtendedPdo extends AbstractLiteDb
     /**
      * {@inheritDoc}
      */
-    public static function getAvailableDrivers()
+    public static function getAvailableDrivers(): array
     {
         return PDO::getAvailableDrivers();
     }
@@ -1528,7 +1540,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @param PDOStatement $sth
      * @return $this
      */
-    public function freeResource($sth = null)
+    public function freeResource($sth = null): self
     {
         if ($sth && $sth instanceof PDOStatement) {
             $sth->closeCursor();
@@ -1545,7 +1557,7 @@ class ExtendedPdo extends AbstractLiteDb
      * Get the name of the driver.
      * @return string
      */
-    public function getDriverName()
+    public function getDriverName(): string
     {
         return $this->config['driver'];
     }
@@ -1554,7 +1566,7 @@ class ExtendedPdo extends AbstractLiteDb
      * Get the name of the connected database.
      * @return string
      */
-    public function getDatabaseName()
+    public function getDatabaseName(): string
     {
         return $this->databaseName;
     }
@@ -1563,7 +1575,7 @@ class ExtendedPdo extends AbstractLiteDb
      * Set the name of the connected database.
      * @param  string $database
      */
-    public function setDatabaseName($database)
+    public function setDatabaseName($database): void
     {
         $this->databaseName = $database;
     }
@@ -1572,7 +1584,7 @@ class ExtendedPdo extends AbstractLiteDb
      * Get the table prefix for the connection.
      * @return string
      */
-    public function getTablePrefix()
+    public function getTablePrefix(): string
     {
         return $this->tablePrefix;
     }
@@ -1582,7 +1594,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @param  string $prefix
      * @return void
      */
-    public function setTablePrefix($prefix)
+    public function setTablePrefix($prefix): void
     {
         $this->tablePrefix = $prefix;
     }
@@ -1601,7 +1613,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @param  string $value
      * @return string
      */
-    protected function removeLeadingBoolean($value)
+    protected function removeLeadingBoolean($value): string
     {
         return preg_replace('/^and |or /i', '', $value, 1);
     }
@@ -1611,7 +1623,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @param array $context
      * @param string $category
      */
-    public function log(string $message, array $context = [], $category = 'query')
+    public function log(string $message, array $context = [], $category = 'query'): void
     {
         if ($this->debug) {
             $this->queryLog[] = [microtime(1), 'db.' . $category, $message, $context];
@@ -1629,7 +1641,7 @@ class ExtendedPdo extends AbstractLiteDb
     /**
      * @return PDO
      */
-    public function getPdo()
+    public function getPdo(): PDO
     {
         if ($this->pdo instanceof \Closure) {
             return $this->pdo = ($this->pdo)($this);
@@ -1641,7 +1653,7 @@ class ExtendedPdo extends AbstractLiteDb
     /**
      * @param PDO $pdo
      */
-    public function setPdo(PDO $pdo)
+    public function setPdo(PDO $pdo): void
     {
         $this->pdo = $pdo;
     }
