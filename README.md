@@ -5,7 +5,7 @@ simple db client for pdo, mongo
 ## 项目地址
 
 - **github** https://github.com/inhere/php-lite-database.git
-- **git@osc** https://git.oschina.net/inhere/php-lite-database.git
+- **git@osc** https://gitee.com/inhere/php-lite-database.git
 
 ## 安装
 
@@ -30,7 +30,6 @@ composer require inhere/lite-db
 ```bash
 git clone https://github.com/inhere/php-lite-database.git
 ```
-
 
 ## License 
 

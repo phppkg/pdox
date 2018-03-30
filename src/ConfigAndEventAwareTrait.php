@@ -35,7 +35,7 @@ trait ConfigAndEventAwareTrait
      * @param array $args
      * @return mixed
      */
-    protected function fire($name, array $args = [])
+    protected function fire(string $name, array $args = [])
     {
         if (!isset($this->_events[$name]) || !($cb = $this->_events[$name])) {
             return null;
@@ -87,7 +87,7 @@ trait ConfigAndEventAwareTrait
 
             // ClassName::method
             $cb = \explode('::', $cb, 2);
-        } elseif (\is_object($cb) && method_exists($cb, '__invoke')) {
+        } elseif (\is_object($cb) && \method_exists($cb, '__invoke')) {
             return $cb(...$args);
         }
 
