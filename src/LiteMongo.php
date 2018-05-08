@@ -12,8 +12,10 @@ namespace Inhere\LiteDb;
  * Class ExtendedMgo - for mongodb database
  * @package Inhere\LiteDb
  */
-class ExtendedMgo extends AbstractLiteDb
+class LiteMongo implements LiteDatabaseInterface
 {
+    use ConfigAndEventAwareTrait;
+
     const DRIVER_MONGO = 'mongo';
     const DRIVER_MONGO_DB = 'mongodb';
 
@@ -24,7 +26,7 @@ class ExtendedMgo extends AbstractLiteDb
      * @param string $driver
      * @return bool
      */
-    public static function isSupported(string $driver)
+    public static function isSupported(string $driver): bool
     {
         if ($driver === self::DRIVER_MONGO_DB) {
             return \extension_loaded('mongodb');
@@ -38,15 +40,14 @@ class ExtendedMgo extends AbstractLiteDb
     }
 
     /**
-     * @return $this
+     * connect
      */
     public function connect()
     {
         if ($this->mgo) {
-            return $this;
+            return;
         }
 
-        return $this;
     }
 
     /**

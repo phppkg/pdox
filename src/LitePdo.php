@@ -8,20 +8,21 @@
 
 namespace Inhere\LiteDb;
 
+use Inhere\LiteDb\Helper\DBHelper;
+use Inhere\LiteDb\Helper\DsnHelper;
 use PDO;
 use PDOStatement;
 
 /**
- * Class ExtendedPdo - for mysql, sqlite, pgSql database
+ * Class LiteDatabase - for mysql, sqlite, pgSql database
  * @package Inhere\LiteDb
  */
-class ExtendedPdo extends AbstractLiteDb
+class LitePdo implements LitePdoInterface
 {
+    use ConfigAndEventAwareTrait;
+
     /** @var PDO */
     protected $pdo;
-
-    /** @var bool */
-    protected $debug = false;
 
     /** @var string */
     protected $databaseName;
@@ -45,21 +46,11 @@ class ExtendedPdo extends AbstractLiteDb
     protected $quoteNameEscapeReplace = '""';
 
     /**
-     * All of the queries run against the connection.
-     * @var array
-     * [
-     *  [time, category, message, context],
-     *  ... ...
-     * ]
-     */
-    protected $queryLog = [];
-
-    /**
      * database config
      * @var array
      */
     protected $config = [
-        'driver' => 'mysql', // 'sqlite'
+        'driver' => 'mysql', // 'sqlite' 'pgsql' 'mssql'
         // 'dsn' => 'mysql:host=localhost;port=3306;dbname=test;charset=UTF8',
         'host' => 'localhost',
         'port' => '3306',
@@ -110,14 +101,13 @@ class ExtendedPdo extends AbstractLiteDb
      */
     public function __construct(array $config = [])
     {
-        if (!class_exists(\PDO::class, false)) {
+        if (!\class_exists(\PDO::class, false)) {
             throw new \RuntimeException("The php extension 'pdo' is required.");
         }
 
-        parent::__construct($config);
+        $this->setConfig($config);
 
         // init something...
-        $this->debug = (bool)$this->config['debug'];
         $this->tablePrefix = $this->config['tablePrefix'];
         $this->databaseName = $this->config['database'];
 
@@ -133,14 +123,13 @@ class ExtendedPdo extends AbstractLiteDb
     }
 
     /**
-     * @return $this
      * @throws \InvalidArgumentException
      * @throws \PDOException
      */
-    public function connect(): self
+    public function connect()
     {
         if ($this->pdo) {
-            return $this;
+            return;
         }
 
         $config = $this->config;
@@ -162,10 +151,8 @@ class ExtendedPdo extends AbstractLiteDb
             \usleep(50000);
         } while ($retry >= 0);
 
-        $this->log('connect to DB server', ['config' => $config], 'connect');
-        $this->fire(self::CONNECT, [$this]);
-
-        return $this;
+        $this->log('connect to DB server', [$config], 'connect');
+        $this->fire(self::CONNECT, [$config]);
     }
 
     /**
@@ -184,7 +171,8 @@ class ExtendedPdo extends AbstractLiteDb
      */
     public function disconnect()
     {
-        $this->fire(self::DISCONNECT, [$this]);
+        $this->log('disconnect from DB server', [], 'connect');
+        $this->fire(self::DISCONNECT, [$this->config]);
         $this->pdo = null;
     }
 
@@ -212,74 +200,31 @@ class ExtendedPdo extends AbstractLiteDb
      *************************************************************************/
 
     /**
-     * @var array
-     */
-    const SELECT_NODES = [
-        // string: 'id, name'; array: ['id', 'name']
-        'select',
-        'from',
-        // string: full join clause; array: [$table, $condition, $type = 'LEFT']
-        'join',
-
-        /** @see handleWheres() */
-        'where',
-
-        'having', // [$conditions, $glue = 'AND']
-        'group', // 'id, name' || ['id', 'name']
-        'order', // 'created ASC' || ['created', 'publish', 'DESC'] ['created ASC', 'publish DESC']
-        'limit', // 10 OR [2, 10]
-    ];
-
-    /**
-     * @var array
-     */
-    const UPDATE_NODES = ['update', 'set', 'where', 'order', 'limit'];
-
-    /**
-     * @var array
-     */
-    const DELETE_NODES = ['from', 'join', 'where', 'order', 'limit'];
-
-    /**
-     * @var array
-     */
-    const SELECT_OPTIONS = [
-        /* data index column. */
-        'indexKey' => null,
-
-        /*
-        data load type, in :
-        'object' -- return object, instanceof the 'class'
-        'column'       -- return array, only  [ 'value' ]
-        'assoc'       -- return array, Contain  [ 'column' => 'value']
-         */
-        'fetchType' => 'assoc',
-        'class' => null, // a className. when 'fetchType' eq 'object'
-    ];
-
-    /**
      * Run a select statement, fetch one
      * @param  string $from
      * @param  array|string|int $wheres
      * @param  string|array $select
      * @param  array $options
+     * allowed options:
+     *  - returnSql    Will not be executed, just return the built SQL.
+     * more option please @see LitePdoInterface::QUERY_OPTIONS
      * @return array
      * @throws \PDOException
      * @throws \InvalidArgumentException
      */
-    public function findOne(string $from, $wheres = 1, $select = '*', array $options = []): array
+    public function queryOne(string $from, $wheres = 1, $select = '*', array $options = []): array
     {
         $options['select'] = $this->qns($select ?: '*');
         $options['from'] = $this->qn($from);
 
-        list($where, $bindings) = $this->handleWheres($wheres);
+        list($where, $bindings) = DBHelper::handleConditions($wheres, $this);
 
         $options['where'] = $where;
         $options['limit'] = 1;
 
         $statement = $this->compileSelect($options);
 
-        if (isset($options['dumpSql'])) {
+        if (isset($options['returnSql'])) {
             return [$statement, $bindings];
         }
 
@@ -306,16 +251,19 @@ class ExtendedPdo extends AbstractLiteDb
      * @param  array|string|int $wheres
      * @param  string|array $select
      * @param  array $options
+     * allowed options:
+     *  - returnSql    Will not be executed, just return the built SQL.
+     * more option please @see LitePdoInterface::QUERY_OPTIONS
      * @return array
      * @throws \PDOException
      * @throws \InvalidArgumentException
      */
-    public function findAll(string $from, $wheres = 1, $select = '*', array $options = []): array
+    public function queryAll(string $from, $wheres = 1, $select = '*', array $options = []): array
     {
         $options['select'] = $this->qns($select ?: '*');
         $options['from'] = $this->qn($from);
 
-        list($where, $bindings) = $this->handleWheres($wheres);
+        list($where, $bindings) = DBHelper::handleConditions($wheres, $this);
 
         $options['where'] = $where;
 
@@ -325,7 +273,7 @@ class ExtendedPdo extends AbstractLiteDb
 
         $statement = $this->compileSelect($options);
 
-        if (isset($options['dumpSql'])) {
+        if (isset($options['returnSql'])) {
             return [$statement, $bindings];
         }
 
@@ -354,6 +302,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @param  string $from
      * @param  array $data <column => value>
      * @param  array $options
+     *  - returnSql    Will not be executed, just return the built SQL.
      * @return int|array
      * @throws \PDOException
      * @throws \InvalidArgumentException
@@ -366,7 +315,7 @@ class ExtendedPdo extends AbstractLiteDb
 
         list($statement, $bindings) = $this->compileInsert($from, $data);
 
-        if (isset($options['dumpSql'])) {
+        if (isset($options['returnSql'])) {
             return [$statement, $bindings];
         }
 
@@ -381,6 +330,8 @@ class ExtendedPdo extends AbstractLiteDb
      * @param string $from
      * @param array $dataSet
      * @param  array $options
+     *  - returnSql     Will not be executed, just return the built SQL.
+     *  - columns       Setting the table columns to insert.
      * @return int|array
      * @throws \PDOException
      * @throws \InvalidArgumentException
@@ -389,7 +340,7 @@ class ExtendedPdo extends AbstractLiteDb
     {
         list($statement, $bindings) = $this->compileInsert($from, $dataSet, $options['columns'] ?? [], true);
 
-        if (isset($options['dumpSql'])) {
+        if (isset($options['returnSql'])) {
             return [$statement, $bindings];
         }
 
@@ -408,14 +359,14 @@ class ExtendedPdo extends AbstractLiteDb
      */
     public function update(string $from, $wheres, array $values, array $options = [])
     {
-        list($where, $bindings) = $this->handleWheres($wheres);
+        list($where, $bindings) = DBHelper::handleConditions($wheres, $this);
 
         $options['update'] = $this->qn($from);
         $options['where'] = $where;
 
         $statement = $this->compileUpdate($values, $bindings, $options);
 
-        if (isset($options['dumpSql'])) {
+        if (isset($options['returnSql'])) {
             return [$statement, $bindings];
         }
 
@@ -437,14 +388,14 @@ class ExtendedPdo extends AbstractLiteDb
             throw new \InvalidArgumentException('Safety considerations, where conditions can not be empty');
         }
 
-        list($where, $bindings) = $this->handleWheres($wheres);
+        list($where, $bindings) = DBHelper::handleConditions($wheres, $this);
 
         $options['from'] = $this->qn($from);
         $options['where'] = $where;
 
         $statement = $this->compileDelete($options);
 
-        if (isset($options['dumpSql'])) {
+        if (isset($options['returnSql'])) {
             return [$statement, $bindings];
         }
 
@@ -464,7 +415,7 @@ class ExtendedPdo extends AbstractLiteDb
      */
     public function count(string $table, $wheres): int
     {
-        list($where, $bindings) = $this->handleWheres($wheres);
+        list($where, $bindings) = DBHelper::handleConditions($wheres, $this);
         $sql = "SELECT COUNT(*) AS total FROM {$table} WHERE {$where}";
 
         $result = $this->fetchObject($sql, $bindings);
@@ -480,17 +431,17 @@ class ExtendedPdo extends AbstractLiteDb
      * ```
      * @param $statement
      * @param array $bindings
-     * @return int
+     * @return bool
      * @throws \PDOException
      * @throws \InvalidArgumentException
      */
-    public function exists($statement, array $bindings = []): int
+    public function exists($statement, array $bindings = []): bool
     {
         $sql = \sprintf('SELECT EXISTS(%s) AS `exists`', $statement);
 
         $result = $this->fetchObject($sql, $bindings);
 
-        return $result ? $result->exists : 0;
+        return $result ? (bool)$result->exists : false;
     }
 
     /********************************************************************************
@@ -793,7 +744,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @throws \PDOException
      * @throws \InvalidArgumentException
      */
-    public function cursor($statement, array $bindings = [], $fetchType = PDO::FETCH_ASSOC)
+    public function cursor(string $statement, array $bindings = [], $fetchType = PDO::FETCH_ASSOC)
     {
         $sth = $this->execute($statement, $bindings);
 
@@ -812,7 +763,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @throws \InvalidArgumentException
      * @return \Generator
      */
-    public function yieldAssoc($statement, array $bindings = [])
+    public function yieldAssoc(string $statement, array $bindings = [])
     {
         $sth = $this->execute($statement, $bindings);
 
@@ -831,7 +782,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @throws \PDOException
      * @throws \InvalidArgumentException
      */
-    public function yieldAll($statement, array $bindings = [])
+    public function yieldAll(string $statement, array $bindings = [])
     {
         $sth = $this->execute($statement, $bindings);
 
@@ -849,7 +800,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @throws \PDOException
      * @throws \InvalidArgumentException
      */
-    public function yieldValue($statement, array $bindings = [])
+    public function yieldValue(string $statement, array $bindings = [])
     {
         $sth = $this->execute($statement, $bindings);
 
@@ -868,7 +819,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @throws \PDOException
      * @throws \InvalidArgumentException
      */
-    public function yieldColumn($statement, array $bindings = [], int $columnNum = 0)
+    public function yieldColumn(string $statement, array $bindings = [], int $columnNum = 0)
     {
         $sth = $this->execute($statement, $bindings);
 
@@ -892,7 +843,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @throws \PDOException
      * @throws \InvalidArgumentException
      */
-    public function yieldObjects($statement, array $bindings = [], $class = 'stdClass', array $args = [])
+    public function yieldObjects(string $statement, array $bindings = [], string $class = 'stdClass', array $args = [])
     {
         $sth = $this->execute($statement, $bindings);
 
@@ -910,7 +861,7 @@ class ExtendedPdo extends AbstractLiteDb
      * @throws \PDOException
      * @throws \InvalidArgumentException
      */
-    public function yieldPairs($statement, array $bindings = [])
+    public function yieldPairs(string $statement, array $bindings = [])
     {
         $sth = $this->execute($statement, $bindings);
 
@@ -932,16 +883,16 @@ class ExtendedPdo extends AbstractLiteDb
      * @throws \InvalidArgumentException
      * @throws \PDOException
      */
-    public function execute($statement, array $params = []): PDOStatement
+    public function execute(string $statement, array $params = []): PDOStatement
     {
         // trigger before event
-        $this->fire(self::BEFORE_EXECUTE, [$statement, $params, 'execute']);
+        $this->fire(self::BEFORE_EXECUTE, [$statement, $params]);
 
         $sth = $this->prepareWithBindings($statement, $params);
         $sth->execute();
 
         // trigger after event
-        $this->fire(self::AFTER_EXECUTE, [$statement, 'execute']);
+        $this->fire(self::AFTER_EXECUTE, [$statement]);
 
         return $sth;
     }
@@ -953,10 +904,10 @@ class ExtendedPdo extends AbstractLiteDb
      * @throws \PDOException
      * @throws \InvalidArgumentException
      */
-    public function prepareWithBindings($statement, array $params = []): PDOStatement
+    public function prepareWithBindings(string $statement, array $params = []): PDOStatement
     {
         $this->connect();
-        $statement = $this->replaceTablePrefix($statement);
+        $statement = DBHelper::replaceTablePrefix($statement, $this->tablePrefix, $this->prefixPlaceholder);
 
         // if there are no values to bind ...
         if (!$params) {
@@ -1046,7 +997,7 @@ class ExtendedPdo extends AbstractLiteDb
     }
 
     /**************************************************************************
-     * helper method
+     * build statement methods
      *************************************************************************/
 
     /**
@@ -1070,80 +1021,6 @@ class ExtendedPdo extends AbstractLiteDb
     }
 
     /**
-     * handle where condition
-     * @param array|string|\Closure|mixed $wheres
-     * @example
-     * ```
-     * ...
-     * $result = $db->findAll('user', [
-     *      'userId' => 23,      // ==> 'AND `userId` = 23'
-     *      'title' => 'test',  // value will auto add quote, equal to "AND title = 'test'"
-     *
-     *      ['publishTime', '>', '0'],  // ==> 'AND `publishTime` > 0'
-     *      ['createdAt', '<=', 1345665427, 'OR'],  // ==> 'OR `createdAt` <= 1345665427'
-     *      ['id', 'IN' ,[4,5,56]],   // ==> '`id` IN ('4','5','56')'
-     *      ['id', 'NOT IN', [4,5,56]], // ==> '`id` NOT IN ('4','5','56')'
-     *      // a closure
-     *      function () {
-     *          return 'a < 5 OR b > 6';
-     *      }
-     * ]);
-     * ```
-     * @return array
-     * @throws \InvalidArgumentException
-     */
-    public function handleWheres($wheres): array
-    {
-        if (\is_object($wheres) && $wheres instanceof \Closure) {
-            $wheres = $wheres($this);
-        }
-
-        if (!$wheres || $wheres === 1) {
-            return [1, []];
-        }
-
-        if (\is_string($wheres)) {
-            return [$wheres, []];
-        }
-
-        $nodes = $bindings = [];
-
-        if (\is_array($wheres)) {
-            foreach ($wheres as $key => $val) {
-                if (\is_object($val) && $val instanceof \Closure) {
-                    $val = $val($this);
-                }
-
-                $key = trim($key);
-
-                // string key: $key is column name, $val is column value
-                if ($key && !\is_numeric($key)) {
-                    $nodes[] = 'AND ' . $this->qn($key) . '= ?';
-                    $bindings[] = $val;
-
-                    // array: [column, operator(e.g '=', '>=', 'IN'), value, option(Is optional, e.g 'AND', 'OR')]
-                } elseif (\is_array($val)) {
-                    if (!isset($val[2])) {
-                        throw new \InvalidArgumentException('Where condition data is incomplete, at least 3 elements');
-                    }
-
-                    $bool = $val[3] ?? 'AND';
-                    $nodes[] = \strtoupper($bool) . ' ' . $this->qn($val[0]) . " {$val[1]} ?";
-                    $bindings[] = $val[2];
-                } else {
-                    $val = trim((string)$val);
-                    $nodes[] = \preg_match('/^and |or /i', $val) ? $val : 'AND ' . $val;
-                }
-            }
-        }
-
-        $where = \implode(' ', $nodes);
-        unset($nodes);
-
-        return [$this->removeLeadingBoolean($where), $bindings];
-    }
-
-    /**
      * @param array $options
      * @return string
      */
@@ -1161,8 +1038,9 @@ class ExtendedPdo extends AbstractLiteDb
      */
     public function compileInsert(string $from, array $data, array $columns = [], $isBatch = false): array
     {
+        $sql = 'INSERT INTO ';
         $bindings = [];
-        $table = $this->qn($from);
+        $sql .= $this->qn($from);
 
         if (!$isBatch) {
             $bindings = \array_values($data);
@@ -1188,7 +1066,9 @@ class ExtendedPdo extends AbstractLiteDb
             $valueStr = \rtrim($valueStr, ', ');
         }
 
-        return ["INSERT INTO $table ($nameStr) VALUES $valueStr", $bindings];
+        $sql .= " ({$nameStr}) VALUES {$valueStr}";
+
+        return [$sql, $bindings];
     }
 
     /**
@@ -1287,6 +1167,10 @@ class ExtendedPdo extends AbstractLiteDb
         return \implode(' ', $nodes);
     }
 
+    /**************************************************************************
+     * helper methods
+     *************************************************************************/
+
     /**
      * @param array|string $names
      * @return string
@@ -1382,6 +1266,13 @@ class ExtendedPdo extends AbstractLiteDb
         }
     }
 
+    /**
+     * @param $value
+     * @param int $type
+     * @return string
+     * @throws \PDOException
+     * @throws \InvalidArgumentException
+     */
     public function q($value, $type = PDO::PARAM_STR): string
     {
         return $this->quote($value, $type);
@@ -1426,13 +1317,15 @@ class ExtendedPdo extends AbstractLiteDb
     {
         $this->connect();
 
-        // trigger before event
-        $this->fire(self::BEFORE_EXECUTE, [$statement, 'exec']);
+        $statement = DBHelper::replaceTablePrefix($statement, $this->tablePrefix, $this->prefixPlaceholder);
 
-        $affected = $this->pdo->exec($this->replaceTablePrefix($statement));
+        // trigger before event
+        $this->fire(self::BEFORE_EXECUTE, [$statement]);
+
+        $affected = $this->pdo->exec($statement);
 
         // trigger after event
-        $this->fire(self::AFTER_EXECUTE, [$statement, 'exec']);
+        $this->fire(self::AFTER_EXECUTE, [$statement]);
 
         return $affected;
     }
@@ -1447,13 +1340,15 @@ class ExtendedPdo extends AbstractLiteDb
     {
         $this->connect();
 
-        // trigger before event
-        $this->fire(self::BEFORE_EXECUTE, [$statement, 'query']);
+        $statement = DBHelper::replaceTablePrefix($statement, $this->tablePrefix, $this->prefixPlaceholder);
 
-        $sth = $this->pdo->query($this->replaceTablePrefix($statement), ...$fetch);
+        // trigger before event
+        $this->fire(self::BEFORE_EXECUTE, [$statement]);
+
+        $sth = $this->pdo->query($statement, ...$fetch);
 
         // trigger after event
-        $this->fire(self::AFTER_EXECUTE, [$statement, 'query']);
+        $this->fire(self::AFTER_EXECUTE, [$statement]);
 
         return $sth;
     }
@@ -1470,12 +1365,13 @@ class ExtendedPdo extends AbstractLiteDb
         $this->connect();
         $this->log($statement, $options);
 
-        return $this->pdo->prepare($this->replaceTablePrefix($statement), $options);
+        $statement = DBHelper::replaceTablePrefix($statement, $this->tablePrefix, $this->prefixPlaceholder);
+
+        return $this->pdo->prepare($statement, $options);
     }
 
     /**
      * {@inheritDoc}
-     * @throws \LogicException
      * @throws \PDOException
      * @throws \InvalidArgumentException
      */
@@ -1654,45 +1550,6 @@ class ExtendedPdo extends AbstractLiteDb
     }
 
     /**
-     * @param $sql
-     * @return mixed
-     */
-    public function replaceTablePrefix($sql)
-    {
-        return \str_replace($this->prefixPlaceholder, $this->tablePrefix, (string)$sql);
-    }
-
-    /**
-     * Remove the leading boolean from a statement.
-     * @param  string $value
-     * @return string
-     */
-    protected function removeLeadingBoolean($value): string
-    {
-        return \preg_replace('/^and |or /i', '', $value, 1);
-    }
-
-    /**
-     * @param string $message
-     * @param array $context
-     * @param string $category
-     */
-    public function log(string $message, array $context = [], $category = 'query'): void
-    {
-        if ($this->debug) {
-            $this->queryLog[] = [microtime(1), 'db.' . $category, $message, $context];
-        }
-    }
-
-    /**
-     * @return array
-     */
-    public function getQueryLog(): array
-    {
-        return $this->queryLog;
-    }
-
-    /**
      * @return PDO
      */
     public function getPdo(): PDO
@@ -1719,5 +1576,4 @@ class ExtendedPdo extends AbstractLiteDb
     {
         return (bool) $this->pdo;
     }
-
 }

@@ -8,6 +8,8 @@
 
 namespace Inhere\LiteDb;
 
+use Inhere\LiteDb\Helper\DBHelper;
+
 /**
  * Trait ConfigAndEventAwareTrait
  * @package Inhere\LiteDb
@@ -17,13 +19,70 @@ trait ConfigAndEventAwareTrait
     /** @var array  */
     private $_events = [];
 
+    /** @var bool */
+    protected $debug = false;
+
+    /**
+     * @var array database config
+     */
+    protected $config = [
+        'debug' => false,
+    ];
+
+    /**
+     * All of the queries run against the connection.
+     * @var array
+     * [
+     *  // pdo
+     *  [time, category, message, context],
+     *  ... ...
+     * ]
+     */
+    protected $queryLogs = [];
+
+    /**
+     * @param array $config
+     * @return static
+     */
+    public static function create(array $config = [])
+    {
+        return new static($config);
+    }
+
+    /**
+     * @param array $config
+     */
+    public function __construct(array $config = [])
+    {
+        $this->setConfig($config);
+
+        // init something...
+        $this->debug = (bool)$this->config['debug'];
+    }
+
+    /**
+     * __destruct
+     */
+    public function __destruct()
+    {
+        $this->disconnect();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDebug(): bool
+    {
+        return $this->debug;
+    }
+
     /**
      * register a event callback
      * @param string $name event name
      * @param callable $cb event callback
      * @param bool $replace replace exists's event cb
      */
-    public function on($name, callable $cb, $replace = false): void
+    public function on(string $name, callable $cb, $replace = false): void
     {
         if ($replace || !isset($this->_events[$name])) {
             $this->_events[$name] = $cb;
@@ -42,6 +101,19 @@ trait ConfigAndEventAwareTrait
         }
 
         return self::call($cb, ...$args);
+    }
+
+    /**
+     * @param string $message
+     * @param array $context
+     * @param string $category
+     */
+    protected function log(string $message, array $context = [], string $category = ''): void
+    {
+        if ($this->debug) {
+            $category = $category ?: DBHelper::detectOperationName($message);
+            $this->queryLogs[] = [\microtime(1), 'db.' . $category, $message, $context];
+        }
     }
 
     /**
@@ -73,11 +145,19 @@ trait ConfigAndEventAwareTrait
     }
 
     /**
+     * @return array
+     */
+    public function getQueryLogs(): array
+    {
+        return $this->queryLogs;
+    }
+
+    /**
      * @param callable|mixed $cb
      * @param array ...$args
      * @return mixed
      */
-    public static function call(callable $cb, ...$args)
+    public static function call($cb, ...$args)
     {
         if (\is_string($cb)) {
             // function

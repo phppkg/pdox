@@ -27,7 +27,6 @@ interface LiteDatabaseInterface
 
     /**
      * connect to db server
-     * @return $this
      */
     public function connect();
 
@@ -51,5 +50,5 @@ interface LiteDatabaseInterface
      * @param string $driver
      * @return bool
      */
-    public static function isSupported(string $driver);
+    public static function isSupported(string $driver): bool ;
 }

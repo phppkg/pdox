@@ -4,7 +4,8 @@
 
 .idea/
 .phpintel/
-/vendor/
+vendor/
+caches/
 !README.md
 !.gitkeep
 composer.lock
