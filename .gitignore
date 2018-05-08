@@ -5,6 +5,7 @@
 .idea/
 .phpintel/
 vendor/
+classes/
 caches/
 !README.md
 !.gitkeep

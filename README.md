@@ -1,50 +1,57 @@
 # simple db client
 
-simple db client for pdo, mongo
+[![License](https://img.shields.io/packagist/l/inhere/console.svg?style=flat-square)](LICENSE)
+[![Php Version](https://img.shields.io/badge/php-%3E=7.0-brightgreen.svg?maxAge=2592000)](https://packagist.org/packages/inhere/lite-db)
+[![Latest Stable Version](http://img.shields.io/packagist/v/inhere/lite-db.svg)](https://packagist.org/packages/inhere/lite-db)
 
-## 项目地址
+Simple database client for mysql,sqlite by PDO
+
+## Projects
 
 - **github** https://github.com/inhere/php-lite-database.git
-- **git@osc** https://gitee.com/inhere/php-lite-database.git
+- **gitee** https://gitee.com/inhere/php-lite-database.git
 
-## 安装
+## Install
 
-- composer 命令
+- By composer require
 
-```php
+```bash
 composer require inhere/lite-db
 ```
 
-- composer.json
+- By composer.json
 
 ```json
 {
     "require": {
-        "inhere/lite-db": "dev-master"
+        "inhere/lite-db": "~1.0.0"
     }
 }
 ```
 
-- 直接拉取
+- Pull directly
 
 ```bash
 git clone https://github.com/inhere/php-lite-database.git
 ```
 
-## usage
+## Usage
 
 ### create connection
 
 ```php
 $db = LitePdo::create([
+    // open debug, will record query logs.
     'debug' => 1,
+    
+    'driver' => 'mysql', // 'sqlite' 'pgsql' 'mssql'
     'host' => 'localhost',
     'user' => 'root',
     'password' => 'password',
     'database' => 'test',
 ]);
 
-// add event listen.
+// add event listeners.
 
 $db->on(LitePdo::CONNECT, function ($db) {
     echo "connect database success\n";
@@ -149,6 +156,10 @@ var_dump($ret);
 ```php
 var_dump($db->getQueryLogs());
 ```
+
+## Methods docs
+
+> https://inhere.github.io/php-lite-database/classes/master/Inhere/LiteDb/LitePdo.html
 
 ## License 
 
