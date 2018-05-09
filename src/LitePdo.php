@@ -996,10 +996,6 @@ class LitePdo implements LitePdoInterface
         return $sth->bindValue($key, $val);
     }
 
-    /**************************************************************************
-     * build statement methods
-     *************************************************************************/
-
     /**
      * Check whether the connection is available
      * @return bool
@@ -1019,6 +1015,10 @@ class LitePdo implements LitePdoInterface
 
         return true;
     }
+
+    /**************************************************************************
+     * build statement methods
+     *************************************************************************/
 
     /**
      * @param array $options
@@ -1125,7 +1125,9 @@ class LitePdo implements LitePdoInterface
                 $val = trim($val);
             }
 
-            if ($node === 'join') {
+            if ($node === 'option') {
+                $nodes[] = $isString ? $val : \implode(',', (array)$val);
+            } elseif ($node === 'join') {
                 //string: full join structure. e.g 'left join TABLE t2 on t1.id = t2.id'
                 if ($isString) {
                     $nodes[] = \stripos($val, 'join') !== false ? $val : 'LEFT JOIN ' . $val;
@@ -1134,11 +1136,7 @@ class LitePdo implements LitePdoInterface
                 } elseif (\is_array($val)) {
                     $nodes[] = ($val[2] ?? 'LEFT') . " JOIN {$val[0]} ON {$val[1]}";
                 }
-
-                continue;
-            }
-
-            if ($node === 'having') {
+            } elseif ($node === 'having') {
                 // string: 'having AND col = val'
                 if ($isString) {
                     $nodes[] = \stripos($val, 'having') !== false ? $val: 'HAVING ' . $val;
@@ -1147,21 +1145,13 @@ class LitePdo implements LitePdoInterface
                 } elseif (\is_array($val)) {
                     $nodes[] = 'HAVING ' . ($val[1] ?? 'AND') . " {$val[0]}";
                 }
-
-                continue;
-            }
-
-            if ($node === 'group') {
+            } elseif ($node === 'group') {
                 $nodes[] = 'GROUP BY ' . $this->qns($val);
-                continue;
-            }
-
-            if ($node === 'order') {
+            } elseif ($node === 'order') {
                 $nodes[] = 'ORDER BY ' . ($isString ? $val : \implode(' ', $val));
-                continue;
+            } else {
+                $nodes[] = \strtoupper($node) . ' ' . ($isString ? $val : \implode(',', (array)$val));
             }
-
-            $nodes[] = \strtoupper($node) . ' ' . ($isString ? $val : \implode(',', (array)$val));
         }
 
         return \implode(' ', $nodes);
