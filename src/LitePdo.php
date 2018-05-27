@@ -155,6 +155,7 @@ class LitePdo implements LitePdoInterface
             \usleep(50000);
         } while ($retry >= 0);
 
+        $config['dsn'] = $dsn;
         $this->log('connect to DB server', [$config], 'connect');
         $this->fire(self::CONNECT, [$config]);
     }
@@ -212,11 +213,11 @@ class LitePdo implements LitePdoInterface
      * allowed options:
      *  - returnSql    Will not be executed, just return the built SQL.
      * more option please @see LitePdoInterface::QUERY_OPTIONS
-     * @return array
+     * @return array|mixed
      * @throws \PDOException
      * @throws \InvalidArgumentException
      */
-    public function queryOne(string $from, $wheres = 1, $select = '*', array $options = []): array
+    public function queryOne(string $from, $wheres = 1, $select = '*', array $options = [])
     {
         $options['select'] = $this->qns($select ?: '*');
         $options['from'] = $this->qn($from);

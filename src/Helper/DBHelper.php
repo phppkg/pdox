@@ -29,7 +29,7 @@ class DBHelper
      */
     public static function replaceTablePrefix(string $sql, string $tablePrefix, string $prefixPlaceholder)
     {
-        if (!$tablePrefix || \strpos($sql, $prefixPlaceholder)) {
+        if (!$tablePrefix || !\strpos($sql, $prefixPlaceholder)) {
             return \trim($sql);
         }
 
