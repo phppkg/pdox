@@ -23,13 +23,6 @@ trait ConfigAndEventAwareTrait
     protected $debug = false;
 
     /**
-     * @var array database config
-     */
-    protected $config = [
-        'debug' => false,
-    ];
-
-    /**
      * All of the queries run against the connection.
      * @var array
      * [

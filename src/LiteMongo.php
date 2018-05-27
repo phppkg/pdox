@@ -22,6 +22,14 @@ class LiteMongo implements LiteDatabaseInterface
     private $mgo;
 
     /**
+     * @var array
+     */
+    protected $config = [
+        'url' => '',
+        'database' => ''
+    ];
+
+    /**
      * Is this driver supported.
      * @param string $driver
      * @return bool
