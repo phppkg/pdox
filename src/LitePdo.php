@@ -214,7 +214,6 @@ class LitePdo implements LitePdoInterface
      *  - returnSql    Will not be executed, just return the built SQL.
      * more option please @see LitePdoInterface::QUERY_OPTIONS
      * @return array|mixed
-     * @throws \PDOException
      * @throws \InvalidArgumentException
      */
     public function queryOne(string $from, $wheres = 1, $select = '*', array $options = [])
@@ -260,7 +259,6 @@ class LitePdo implements LitePdoInterface
      *  - returnSql    Will not be executed, just return the built SQL.
      * more option please @see LitePdoInterface::QUERY_OPTIONS
      * @return array
-     * @throws \PDOException
      * @throws \InvalidArgumentException
      */
     public function queryAll(string $from, $wheres = 1, $select = '*', array $options = []): array
@@ -359,7 +357,6 @@ class LitePdo implements LitePdoInterface
      * @param  array $values
      * @param array $options
      * @return int|array
-     * @throws \PDOException
      * @throws \InvalidArgumentException
      */
     public function update(string $from, $wheres, array $values, array $options = [])
@@ -384,7 +381,6 @@ class LitePdo implements LitePdoInterface
      * @param  array|string $wheres
      * @param  array $options
      * @return int|array
-     * @throws \PDOException
      * @throws \InvalidArgumentException
      */
     public function delete(string $from, $wheres, array $options = [])
