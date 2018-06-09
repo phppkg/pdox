@@ -1170,7 +1170,13 @@ class LitePdo implements LitePdoInterface
     public function qns($names): string
     {
         if (\is_string($names)) {
-            $names = trim($names, ', ');
+            $names = \trim($names, ', ');
+
+            // if has db function. eg 'count(*) as total'
+            if (\strpos($names, '(')) {
+                return $names;
+            }
+
             $names = \strpos($names, ',') ? \explode(',', $names) : [$names];
         }
 
