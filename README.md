@@ -127,6 +127,33 @@ $ret = $db->queryAll('user', [ ['username', 'like', '%tes%'] ], '*', [
     'returnSql' => 1,
 ]);
 var_dump($ret);
+
+// more conditions
+$ret = $db->queryAll('user', [
+     'userId' => 23,      // 'AND `userId` = 23'
+     'title' => 'test',  // value will auto add quote, equal to "AND title = 'test'"
+     'status' => [1, 2], // status IN (1,2)
+     
+     ['publishAt', '>', '0'],  // ==> 'AND `publishAt` > 0'
+     ['createdAt', '<=', 1345665427, 'OR'],  // ==> 'OR `createdAt` <= 1345665427'
+     ['id', 'IN' ,[4,5,56]],   // ==> '`id` IN ('4','5','56')'
+     ['id', 'NOT IN', [4,5,56]], // ==> '`id` NOT IN ('4','5','56')'
+     
+     // a closure
+     function () {
+         return 'a < 5 OR b > 6';
+     }
+]);
+
+// SQL: SELECT * FROM `user` WHERE "name"= ? OR ( "type"= ? AND "createAt" <= ? ) AND "status" IN ('1','2')
+$ret = $db->queryAll('user', [
+  'name' => 'tom',
+  'or' => '(',
+  'type' => 'admin',
+  ['createAt', '<=', \date('Y-m-d H:i:s')],
+  ')',
+  'status' => [1,2]
+]);
 ```
 
 ### update
