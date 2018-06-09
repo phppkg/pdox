@@ -95,7 +95,6 @@ class DBHelper
         if (\is_string($wheres)) {
             return [$wheres, []];
         }
-\d($wheres);
 
         $inBrackets = false;
         $nodes = $bindings = [];
