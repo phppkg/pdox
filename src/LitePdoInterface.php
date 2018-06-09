@@ -47,7 +47,7 @@ interface LitePdoInterface extends LiteDatabaseInterface
      * @var array
      */
     const QUERY_OPTIONS = [
-        /* data index column. for list query. */
+        /* data index column. for list query and fetch in (object, column) . */
         'indexKey' => null,
 
         /*

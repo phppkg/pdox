@@ -292,6 +292,7 @@ class LitePdo implements LitePdoInterface
             if ($options['fetchType'] === 'column') {
                 // for get columns, indexKey is column number.
                 $method = 'fetchColumns';
+                $indexKey = (int)$indexKey;
             } elseif ($options['fetchType'] === 'value') {
                 $method = 'fetchValues';
             }
