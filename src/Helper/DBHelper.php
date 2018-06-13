@@ -71,8 +71,10 @@ class DBHelper
      *
      *      ['publishTime', '>', '0'],  // ==> 'AND `publishTime` > 0'
      *      ['createdAt', '<=', 1345665427, 'OR'],  // ==> 'OR `createdAt` <= 1345665427'
+     *      ['publishAt', '<=', \date('Y-m-d H:i:s')],
      *      ['id', 'IN' ,[4,5,56]],   // ==> '`id` IN ('4','5','56')'
      *      ['id', 'NOT IN', [4,5,56]], // ==> '`id` NOT IN ('4','5','56')'
+     *      ['t1.name', 'like', "%tom%", 'or'],
      *      // a closure
      *      function () {
      *          return 'a < 5 OR b > 6';
@@ -109,13 +111,13 @@ class DBHelper
 
                 if ($val === '(') {
                     $nodes[] = \preg_match('/^and|or$/i', $key) ? \strtoupper($key) : 'AND';
-                    $nodes[] = $val;
+                    $nodes[] = '(';
                     $inBrackets = true;
                     continue;
                 }
 
                 if ($val === ')') {
-                    $nodes[] = $val;
+                    $nodes[] = ')';
                     $inBrackets = false;
                     continue;
                 }
@@ -158,10 +160,22 @@ class DBHelper
                     }
 
                     $nodes[] = $bool . ' ' . $db->qn($val[0]) . " {$val[1]} ?";
-                    $bindings[] = $val[2];
+
+                    if (\strtoupper($val[1]) === 'LIKE') {
+                        $bindings[] = "'{$val[2]}'";
+                    } else {
+                        $bindings[] = $val[2];
+                    }
                 } elseif (\is_string($val)) {
+                    $bool = 'AND ';
+
+                    if ($inBrackets) {
+                        $bool = '';
+                        $inBrackets = false;
+                    }
+
                     $val = \trim($val);
-                    $nodes[] = \preg_match('/^and |or /i', $val) ? $val : 'AND ' . $val;
+                    $nodes[] = \preg_match('/^and |or /i', $val) ? $val : $bool . $val;
                 }
             }
         }
