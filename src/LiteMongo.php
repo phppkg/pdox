@@ -6,11 +6,11 @@
  * Time: 12:02
  */
 
-namespace Inhere\LiteDb;
+namespace PhpComp\LiteDb;
 
 /**
  * Class ExtendedMgo - for mongodb database
- * @package Inhere\LiteDb
+ * @package PhpComp\LiteDb
  */
 class LiteMongo implements LiteDatabaseInterface
 {

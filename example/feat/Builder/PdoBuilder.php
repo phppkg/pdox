@@ -6,13 +6,13 @@
  * Time: 12:02
  */
 
-namespace Inhere\LiteDb\Builder;
+namespace PhpComp\LiteDb\Builder;
 
 use PDO;
 
 /**
  * Class ExtendedMgo - for mongodb database
- * @package Inhere\LiteDb
+ * @package PhpComp\LiteDb
  */
 class PdoBuilder
 {

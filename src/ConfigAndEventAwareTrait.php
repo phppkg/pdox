@@ -6,13 +6,13 @@
  * Time: 22:00
  */
 
-namespace Inhere\LiteDb;
+namespace PhpComp\LiteDb;
 
-use Inhere\LiteDb\Helper\DBHelper;
+use PhpComp\LiteDb\Helper\DBHelper;
 
 /**
  * Trait ConfigAndEventAwareTrait
- * @package Inhere\LiteDb
+ * @package PhpComp\LiteDb
  */
 trait ConfigAndEventAwareTrait
 {

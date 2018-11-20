@@ -11,14 +11,14 @@ date_default_timezone_set('Asia/Shanghai');
 spl_autoload_register(function ($class) {
     $file = null;
 
-    if (0 === strpos($class,'Inhere\LiteDb\Examples\\')) {
-        $path = str_replace('\\', '/', substr($class, strlen('Inhere\LiteDb\Examples\\')));
+    if (0 === strpos($class,'PhpComp\LiteDb\Examples\\')) {
+        $path = str_replace('\\', '/', substr($class, strlen('PhpComp\LiteDb\Examples\\')));
         $file = dirname(__DIR__) . "/examples/{$path}.php";
-    } elseif (0 === strpos($class,'Inhere\LiteDb\Tests\\')) {
-        $path = str_replace('\\', '/', substr($class, strlen('Inhere\LiteDb\Tests\\')));
+    } elseif (0 === strpos($class,'PhpComp\LiteDb\Tests\\')) {
+        $path = str_replace('\\', '/', substr($class, strlen('PhpComp\LiteDb\Tests\\')));
         $file = dirname(__DIR__) . "/{$path}.php";
-    } elseif (0 === strpos($class,'Inhere\LiteDb\\')) {
-        $path = str_replace('\\', '/', substr($class, strlen('Inhere\LiteDb\\')));
+    } elseif (0 === strpos($class,'PhpComp\LiteDb\\')) {
+        $path = str_replace('\\', '/', substr($class, strlen('PhpComp\LiteDb\\')));
         $file = dirname(__DIR__) . "/src/{$path}.php";
     }
 

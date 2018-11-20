@@ -6,13 +6,13 @@
  * Time: 22:30
  */
 
-namespace Inhere\LiteDb\Helper;
+namespace PhpComp\LiteDb\Helper;
 
-use Inhere\LiteDb\LitePdo;
+use PhpComp\LiteDb\LitePdo;
 
 /**
  * Class DBHelper
- * @package Inhere\LiteDb\Helper
+ * @package PhpComp\LiteDb\Helper
  */
 class DBHelper
 {

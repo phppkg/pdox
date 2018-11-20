@@ -6,11 +6,11 @@
  * Time: 22:33
  */
 
-namespace Inhere\LiteDb\Helper;
+namespace PhpComp\LiteDb\Helper;
 
 /**
  * Class DsnHelper
- * @package Inhere\LiteDb\Helper
+ * @package PhpComp\LiteDb\Helper
  * @see http://php.net/manual/en/pdo.drivers.php
  * @link https://github.com/ventoviro/windwalker-database
  */

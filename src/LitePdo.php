@@ -6,16 +6,16 @@
  * Time: 下午9:39
  */
 
-namespace Inhere\LiteDb;
+namespace PhpComp\LiteDb;
 
-use Inhere\LiteDb\Helper\DBHelper;
-use Inhere\LiteDb\Helper\DsnHelper;
+use PhpComp\LiteDb\Helper\DBHelper;
+use PhpComp\LiteDb\Helper\DsnHelper;
 use PDO;
 use PDOStatement;
 
 /**
  * Class LiteDatabase - for mysql, sqlite, pgSql database
- * @package Inhere\LiteDb
+ * @package PhpComp\LiteDb
  */
 class LitePdo implements LitePdoInterface
 {

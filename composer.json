@@ -1,9 +1,17 @@
 {
-  "name": "inhere/lite-db",
+  "name": "php-comp/lite-db",
   "type": "library",
   "description": "a simple db tool library of the php",
-  "keywords": ["library", "pdo", "database", "query", "mysql", "mongo"],
-  "homepage": "https://github.com/inhere/php-web-library",
+  "keywords": [
+    "library",
+    "db",
+    "pdo",
+    "database",
+    "query",
+    "mysql",
+    "mongo"
+  ],
+  "homepage": "https://github.com/php-comp/lite-database",
   "license": "MIT",
   "authors": [
     {
@@ -17,7 +25,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Inhere\\LiteDb\\" : "src/"
+      "PhpComp\\LiteDb\\": "src/"
     }
   },
   "suggest": {

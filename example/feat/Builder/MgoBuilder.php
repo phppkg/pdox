@@ -6,11 +6,11 @@
  * Time: 12:02
  */
 
-namespace Inhere\LiteDb\Builder;
+namespace PhpComp\LiteDb\Builder;
 
 /**
  * Class MgoBuilder - for mongodb database
- * @package Inhere\LiteDb
+ * @package PhpComp\LiteDb
  */
 class MgoBuilder
 {

@@ -1,22 +1,19 @@
 # simple db client
 
 [![License](https://img.shields.io/packagist/l/inhere/console.svg?style=flat-square)](LICENSE)
-[![Php Version](https://img.shields.io/badge/php-%3E=7.0-brightgreen.svg?maxAge=2592000)](https://packagist.org/packages/inhere/lite-db)
-[![Latest Stable Version](http://img.shields.io/packagist/v/inhere/lite-db.svg)](https://packagist.org/packages/inhere/lite-db)
+[![Php Version](https://img.shields.io/badge/php-%3E=7.0-brightgreen.svg?maxAge=2592000)](https://packagist.org/packages/php-comp/lite-db)
+[![Latest Stable Version](http://img.shields.io/packagist/v/php-comp/lite-db.svg)](https://packagist.org/packages/php-comp/lite-db)
 
 Simple database client for mysql,sqlite by PDO
 
-## Projects
-
-- **github** https://github.com/inhere/php-lite-database.git
-- **gitee** https://gitee.com/inhere/php-lite-database.git
+- **github** https://github.com/php-comp/lite-database.git
 
 ## Install
 
 - By composer require
 
 ```bash
-composer require inhere/lite-db
+composer require php-comp/lite-db
 ```
 
 - By composer.json
@@ -24,7 +21,7 @@ composer require inhere/lite-db
 ```json
 {
     "require": {
-        "inhere/lite-db": "~1.0.0"
+        "php-comp/lite-db": "~1.0.0"
     }
 }
 ```
@@ -32,7 +29,7 @@ composer require inhere/lite-db
 - Pull directly
 
 ```bash
-git clone https://github.com/inhere/php-lite-database.git
+git clone https://github.com/php-comp/lite-database.git
 ```
 
 ## Usage
@@ -185,6 +182,8 @@ var_dump($db->getQueryLogs());
 ```
 
 ## mongoDB
+
+> un-completed
 
 ### requirements
 

@@ -7,7 +7,7 @@
  */
 
 
-use Inhere\LiteDb\LitePdo;
+use PhpComp\LiteDb\LitePdo;
 
 require dirname(__DIR__) . '/test/boot.php';
 

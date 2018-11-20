@@ -6,11 +6,11 @@
  * Time: 22:54
  */
 
-namespace Inhere\LiteDb;
+namespace PhpComp\LiteDb;
 
 /**
  * Interface LitePdoInterface
- * @package Inhere\LiteDb
+ * @package PhpComp\LiteDb
  */
 interface LitePdoInterface extends LiteDatabaseInterface
 {
