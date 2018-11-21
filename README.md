@@ -1,6 +1,6 @@
 # simple db client
 
-[![License](https://img.shields.io/packagist/l/inhere/console.svg?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/packagist/l/php-comp/lite-db.svg?style=flat-square)](LICENSE)
 [![Php Version](https://img.shields.io/badge/php-%3E=7.0-brightgreen.svg?maxAge=2592000)](https://packagist.org/packages/php-comp/lite-db)
 [![Latest Stable Version](http://img.shields.io/packagist/v/php-comp/lite-db.svg)](https://packagist.org/packages/php-comp/lite-db)
 
