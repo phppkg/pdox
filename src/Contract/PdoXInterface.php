@@ -1,23 +1,25 @@
-<?php
+<?php declare(strict_types=1);
 /**
- * Created by PhpStorm.
- * User: Inhere
- * Date: 2018/5/8 0008
- * Time: 22:54
+ * This file is part of Kite.
+ *
+ * @link     https://github.com/inhere
+ * @author   https://github.com/inhere
+ * @license  MIT
  */
 
-namespace PhpComp\LiteDb;
+namespace PhpComp\PdoX\Contract;
 
 /**
- * Interface LitePdoInterface
- * @package PhpComp\LiteDb
+ * Interface PdoXInterface
+ *
+ * @package PhpComp\PdoX\Contract
  */
-interface LitePdoInterface extends LiteDatabaseInterface
+interface PdoXInterface extends DBXInterface
 {
     /**
      * @var array
      */
-    const SELECT_NODES = [
+    public const SELECT_NODES = [
         // string: 'id, name'; array: ['id', 'name']
         'select',
         'from',
@@ -36,19 +38,19 @@ interface LitePdoInterface extends LiteDatabaseInterface
     /**
      * @var array
      */
-    const UPDATE_NODES = ['update', 'set', 'where', 'order', 'limit'];
+    public const UPDATE_NODES = ['update', 'set', 'where', 'order', 'limit'];
 
     /**
      * @var array
      */
-    const DELETE_NODES = ['from', 'join', 'where', 'order', 'limit'];
+    public const DELETE_NODES = ['from', 'join', 'where', 'order', 'limit'];
 
     /**
      * @var array
      */
-    const QUERY_OPTIONS = [
+    public const QUERY_OPTIONS = [
         /* data index column. for list query and fetch in (object, column) . */
-        'indexKey' => null,
+        'indexKey'  => null,
 
         /*
          data load type, allow:
@@ -57,6 +59,6 @@ interface LitePdoInterface extends LiteDatabaseInterface
          'assoc'   -- return array, Contain  [ 'column' => 'value']
          */
         'fetchType' => 'assoc',
-        'class' => null, // a className. when 'fetchType' eq 'object'
+        'class'     => null, // a className. when 'fetchType' eq 'object'
     ];
 }

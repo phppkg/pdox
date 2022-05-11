@@ -1,29 +1,40 @@
-<?php
+<?php declare(strict_types=1);
 /**
- * Created by PhpStorm.
- * User: Inhere
- * Date: 2017/12/15 0015
- * Time: 22:00
+ * This file is part of Kite.
+ *
+ * @link     https://github.com/inhere
+ * @author   https://github.com/inhere
+ * @license  MIT
  */
 
-namespace PhpComp\LiteDb;
+namespace PhpComp\PdoX;
 
-use PhpComp\LiteDb\Helper\DBHelper;
+use PhpComp\PdoX\Helper\DBHelper;
+use function array_merge;
+use function explode;
+use function is_array;
+use function is_object;
+use function is_string;
+use function method_exists;
+use function strpos;
+use function microtime;
 
 /**
  * Trait ConfigAndEventAwareTrait
- * @package PhpComp\LiteDb
+ *
+ * @package PhpComp\PdoX
  */
 trait ConfigAndEventAwareTrait
 {
-    /** @var array  */
-    private $_events = [];
+    /** @var array */
+    private array $_events = [];
 
     /** @var bool */
-    protected $debug = false;
+    protected bool $debug = false;
 
     /**
      * All of the queries run against the connection.
+     *
      * @var array
      * [
      *  // pdo
@@ -31,13 +42,14 @@ trait ConfigAndEventAwareTrait
      *  ... ...
      * ]
      */
-    protected $queryLogs = [];
+    protected array $queryLogs = [];
 
     /**
      * @param array $config
+     *
      * @return static
      */
-    public static function create(array $config = [])
+    public static function create(array $config = []): static
     {
         return new static($config);
     }
@@ -71,6 +83,7 @@ trait ConfigAndEventAwareTrait
 
     /**
      * register a event callback
+     *
      * @param string $name event name
      * @param callable $cb event callback
      * @param bool $replace replace exists's event cb
@@ -85,9 +98,10 @@ trait ConfigAndEventAwareTrait
     /**
      * @param string $name
      * @param array $args
+     *
      * @return mixed
      */
-    protected function fire(string $name, array $args = [])
+    protected function fire(string $name, array $args = []): mixed
     {
         if (!isset($this->_events[$name]) || !($cb = $this->_events[$name])) {
             return null;
@@ -104,18 +118,20 @@ trait ConfigAndEventAwareTrait
     protected function log(string $message, array $context = [], string $category = ''): void
     {
         if ($this->debug) {
-            $category = $category ?: DBHelper::detectOperationName($message);
-            $this->queryLogs[] = [\microtime(1), 'db.' . $category, $message, $context];
+            $category          = $category ?: DBHelper::detectOperationName($message);
+            $this->queryLogs[] = [microtime(1), 'db.' . $category, $message, $context];
         }
     }
 
     /**
      * Method to get property Options
-     * @param string|null $key
-     * @param mixed $default
+     *
+     * @param string $key
+     * @param mixed|null $default
+     *
      * @return array|mixed
      */
-    public function getConfig($key = null, $default = null)
+    public function getConfig(string $key = '', mixed $default = null): mixed
     {
         if ($key) {
             return $this->config[$key] ?? $default;
@@ -126,13 +142,15 @@ trait ConfigAndEventAwareTrait
 
     /**
      * Method to set property config
-     * @param  array $config
-     * @param  bool $merge
+     *
+     * @param array $config
+     * @param bool $merge
+     *
      * @return static Return self to support chaining.
      */
-    public function setConfig(array $config, $merge = true)
+    public function setConfig(array $config, bool $merge = true): static
     {
-        $this->config = $merge ? \array_merge($this->config, $config) : $config;
+        $this->config = $merge ? array_merge($this->config, $config) : $config;
 
         return $this;
     }
@@ -148,26 +166,27 @@ trait ConfigAndEventAwareTrait
     /**
      * @param callable|mixed $cb
      * @param array ...$args
+     *
      * @return mixed
      */
-    public static function call($cb, ...$args)
+    public static function call($cb, ...$args): mixed
     {
-        if (\is_string($cb)) {
+        if (is_string($cb)) {
             // function
-            if (\strpos($cb, '::') === false) {
+            if (strpos($cb, '::') === false) {
                 return $cb(...$args);
             }
 
             // ClassName::method
-            $cb = \explode('::', $cb, 2);
-        } elseif (\is_object($cb) && \method_exists($cb, '__invoke')) {
+            $cb = explode('::', $cb, 2);
+        } elseif (is_object($cb) && method_exists($cb, '__invoke')) {
             return $cb(...$args);
         }
 
-        if (\is_array($cb)) {
-            list($obj, $mhd) = $cb;
+        if (is_array($cb)) {
+            [$obj, $mhd] = $cb;
 
-            return \is_object($obj) ? $obj->$mhd(...$args) : $obj::$mhd(...$args);
+            return is_object($obj) ? $obj->$mhd(...$args) : $obj::$mhd(...$args);
         }
 
         return $cb(...$args);

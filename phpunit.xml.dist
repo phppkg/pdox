@@ -10,7 +10,7 @@
          stopOnFailure="false"
 >
     <testsuites>
-        <testsuite name="LiteDb Test Suite">
+        <testsuite name="PdoX Test Suite">
             <directory>test</directory>
         </testsuite>
     </testsuites>

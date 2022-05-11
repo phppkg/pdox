@@ -1,18 +1,37 @@
-<?php
+<?php declare(strict_types=1);
 /**
- * Created by PhpStorm.
- * User: inhere
- * Date: 2018-05-10
- * Time: 12:02
+ * This file is part of Kite.
+ *
+ * @link     https://github.com/inhere
+ * @author   https://github.com/inhere
+ * @license  MIT
  */
 
-namespace PhpComp\LiteDb\Builder;
+namespace PhpComp\PdoX\Builder;
 
 use PDO;
+use function addslashes;
+use function strpos;
+use function array_filter;
+use function explode;
+use function is_numeric;
+use function in_array;
+use function count;
+use function array_keys;
+use function str_repeat;
+use function array_values;
+use function is_int;
+use function array_merge;
+use function is_string;
+use function stripos;
+use function is_array;
+use function strtoupper;
+use function implode;
 
 /**
  * Class ExtendedMgo - for mongodb database
- * @package PhpComp\LiteDb
+ *
+ * @package PhpComp\PdoX
  */
 class PdoBuilder
 {
@@ -59,7 +78,7 @@ class PdoBuilder
      */
     const QUERY_OPTIONS = [
         /* data index column. for list query. */
-        'indexKey' => null,
+        'indexKey'  => null,
 
         /*
          data load type, allow:
@@ -68,23 +87,26 @@ class PdoBuilder
          'assoc'   -- return array, Contain  [ 'column' => 'value']
          */
         'fetchType' => 'assoc',
-        'class' => null, // a className. when 'fetchType' eq 'object'
+        'class'     => null, // a className. when 'fetchType' eq 'object'
     ];
 
     /**
      * PDO database connection to use in executing the statement.
+     *
      * @var PDO|null
      */
     private $pdo;
 
     /**
      * Whether to automatically escape values.
+     *
      * @var bool|null
      */
     private $autoQuote;
 
     /**
      * SQL nodes
+     *
      * @var array
      */
     private $nodes = [];
@@ -92,6 +114,7 @@ class PdoBuilder
     /**
      * @param PDO|null $pdo
      * @param bool $autoQuote
+     *
      * @return Miner
      */
     public static function create(PDO $pdo = null, bool $autoQuote = true): self
@@ -101,8 +124,9 @@ class PdoBuilder
 
     /**
      * Constructor.
-     * @param  PDO|null $pdo optional PDO database connection
-     * @param  bool $autoQuote optional auto-escape values, default true
+     *
+     * @param PDO|null $pdo optional PDO database connection
+     * @param bool $autoQuote optional auto-escape values, default true
      */
     public function __construct(PDO $pdo = null, bool $autoQuote = true)
     {
@@ -113,7 +137,9 @@ class PdoBuilder
 
     /**
      * Set the PDO database connection to use in executing this statement.
-     * @param  PDO|null $pdo optional PDO database connection
+     *
+     * @param PDO|null $pdo optional PDO database connection
+     *
      * @return Miner
      */
     public function setPdo(PDO $pdo = null): self
@@ -125,6 +151,7 @@ class PdoBuilder
 
     /**
      * Get the PDO database connection to use in executing this statement.
+     *
      * @return PDO|null
      */
     public function getPdo()
@@ -134,7 +161,9 @@ class PdoBuilder
 
     /**
      * Set whether to automatically escape values.
-     * @param  bool|null $autoQuote whether to automatically escape values
+     *
+     * @param bool|null $autoQuote whether to automatically escape values
+     *
      * @return Miner
      */
     public function setAutoQuote($autoQuote): self
@@ -148,7 +177,9 @@ class PdoBuilder
      * The $override parameter is for convenience in checking if a specific
      * value should be quoted differently than the rest. 'null' defers to the
      * global setting.
-     * @param  bool|null $override value-specific override for convenience
+     *
+     * @param bool|null $override value-specific override for convenience
+     *
      * @return bool
      */
     public function getAutoQuote($override = null): bool
@@ -162,8 +193,10 @@ class PdoBuilder
      * The $override parameter is for convenience in checking if a specific
      * value should be quoted differently than the rest. 'null' defers to the
      * global setting.
-     * @param  mixed $value value to escape (or not)
-     * @param  bool|null $override value-specific override for convenience
+     *
+     * @param mixed $value value to escape (or not)
+     * @param bool|null $override value-specific override for convenience
+     *
      * @return mixed|false value (escaped or original) or false if failed
      */
     public function autoQuote($value, $override = null)
@@ -173,7 +206,9 @@ class PdoBuilder
 
     /**
      * Safely escape a value for use in a statement.
-     * @param  mixed $value value to escape
+     *
+     * @param mixed $value value to escape
+     *
      * @return mixed|false escaped value or false if failed
      */
     public function quote($value)
@@ -184,7 +219,7 @@ class PdoBuilder
             return $pdo->quote($value);
         }
 
-        if (\is_numeric($value)) {
+        if (is_numeric($value)) {
             return $value;
         }
 
@@ -192,7 +227,7 @@ class PdoBuilder
             return 'NULL';
         }
 
-        return "'" . \addslashes($value) . "'";
+        return "'" . addslashes($value) . "'";
     }
 
     /**************************************************************************
@@ -201,21 +236,23 @@ class PdoBuilder
 
     /**
      * Add a SELECT column, table, or expression with optional alias.
-     * @param  string|array $column column name, table name, or expression
-     * @param  string $alias optional alias
+     *
+     * @param string|array $column column name, table name, or expression
+     * @param string $alias optional alias
+     *
      * @return Miner
      */
     public function select($column, string $alias = null): self
     {
-        if (\is_string($column)) {
-            if (\strpos($column, ',')) {
-                $this->select = \array_merge($this->select, \array_filter(\explode(',', $column)));
+        if (is_string($column)) {
+            if (strpos($column, ',')) {
+                $this->select = array_merge($this->select, array_filter(explode(',', $column)));
             } else {
                 $this->select[$column] = $alias;
             }
-        } elseif (\is_array($column)) {
+        } elseif (is_array($column)) {
             foreach ($column as $col => $ali) {
-                if (\is_numeric($col)) {
+                if (is_numeric($col)) {
                     $this->select[$ali] = null;
                 } else {
                     $this->select[$col] = $ali;
@@ -231,19 +268,21 @@ class PdoBuilder
      *************************************************************************/
 
     /**
-     * @param  string $method
-     * @param  array  $args
+     * @param string $method
+     * @param array $args
+     *
      * @return $this
      */
     public function __call(string $method, array $args)
     {
-        if (\in_array($method, self::SELECT_NODES, true)) {
+        if (in_array($method, self::SELECT_NODES, true)) {
             $this->nodes[$method] = $args;
         }
     }
 
     /**
      * Whether this is a SELECT statement.
+     *
      * @return bool whether this is a SELECT statement
      */
     public function isSelect(): bool
@@ -257,6 +296,7 @@ class PdoBuilder
 
     /**
      * @param array $nodes
+     *
      * @return string
      */
     public function compileSelect(array $nodes): string
@@ -269,32 +309,33 @@ class PdoBuilder
      * @param array $data
      * @param array $columns
      * @param bool $isBatch
+     *
      * @return array
      */
     public function compileInsert(string $from, array $data, array $columns = [], $isBatch = false): array
     {
-        $sql = 'INSERT INTO ';
+        $sql      = 'INSERT INTO ';
         $bindings = [];
-        $sql .= $this->qn($from);
+        $sql      .= $this->qn($from);
 
         if (!$isBatch) {
-            $bindings = \array_values($data);
-            $nameStr = $this->qns(\array_keys($data));
-            $valueStr = '(' . rtrim(\str_repeat('?,', \count($data)), ',') . ')';
+            $bindings = array_values($data);
+            $nameStr  = $this->qns(array_keys($data));
+            $valueStr = '(' . rtrim(str_repeat('?,', count($data)), ',') . ')';
         } else {
             if ($columns) {
-                $columnNum = \count($columns);
-                $nameStr = $this->qns($columns);
+                $columnNum = count($columns);
+                $nameStr   = $this->qns($columns);
             } else {
-                $columnNum = \count($data[0]);
-                $nameStr = $this->qns(\array_keys($data[0]));
+                $columnNum = count($data[0]);
+                $nameStr   = $this->qns(array_keys($data[0]));
             }
 
             $valueStr = '';
-            $rowTpl = '(' . rtrim(\str_repeat('?,', $columnNum), ',') . '), ';
+            $rowTpl   = '(' . rtrim(str_repeat('?,', $columnNum), ',') . '), ';
 
             foreach ($data as $row) {
-                $bindings = \array_merge($bindings, \array_values($row));
+                $bindings = array_merge($bindings, array_values($row));
                 $valueStr .= $rowTpl;
             }
 
@@ -311,6 +352,7 @@ class PdoBuilder
      * @param array $updates
      * @param array $bindings
      * @param array $options
+     *
      * @return string
      */
     public function compileUpdate(array $updates, array &$bindings, array $options): string
@@ -318,22 +360,23 @@ class PdoBuilder
         $nodes = $values = [];
 
         foreach ($updates as $column => $value) {
-            if (\is_int($column)) {
+            if (is_int($column)) {
                 continue;
             }
 
-            $nodes[] = $this->qn($column) . '= ?';
+            $nodes[]  = $this->qn($column) . '= ?';
             $values[] = $value;
         }
 
-        $options['set'] = \implode(',', $nodes);
-        $bindings = \array_merge($values, $bindings);
+        $options['set'] = implode(',', $nodes);
+        $bindings       = array_merge($values, $bindings);
 
         return $this->compileNodes(self::UPDATE_NODES, $options);
     }
 
     /**
      * @param array $options
+     *
      * @return string
      */
     public function compileDelete(array $options): string
@@ -344,6 +387,7 @@ class PdoBuilder
     /**
      * @param array $commandNodes
      * @param array $data
+     *
      * @return string
      */
     public function compileNodes(array $commandNodes, array $data): string
@@ -356,41 +400,40 @@ class PdoBuilder
             }
 
             $val = $data[$node];
-            if ($isString = \is_string($val)) {
+            if ($isString = is_string($val)) {
                 $val = trim($val);
             }
 
             if ($node === 'option') {
-                $nodes[] = $isString ? $val : \implode(',', (array)$val);
+                $nodes[] = $isString ? $val : implode(',', (array)$val);
             } elseif ($node === 'join') {
                 //string: full join structure. e.g 'left join TABLE t2 on t1.id = t2.id'
                 if ($isString) {
-                    $nodes[] = \stripos($val, 'join') !== false ? $val : 'LEFT JOIN ' . $val;
+                    $nodes[] = stripos($val, 'join') !== false ? $val : 'LEFT JOIN ' . $val;
 
-                    // array: ['TABLE t2', 't1.id = t2.id', 'left']
-                } elseif (\is_array($val)) {
+                // array: ['TABLE t2', 't1.id = t2.id', 'left']
+                } elseif (is_array($val)) {
                     $nodes[] = ($val[2] ?? 'LEFT') . " JOIN {$val[0]} ON {$val[1]}";
                 }
             } elseif ($node === 'having') {
                 // string: 'having AND col = val'
                 if ($isString) {
-                    $nodes[] = \stripos($val, 'having') !== false ? $val: 'HAVING ' . $val;
+                    $nodes[] = stripos($val, 'having') !== false ? $val : 'HAVING ' . $val;
 
-                    // array: ['t1.id = t2.id', 'AND']
-                } elseif (\is_array($val)) {
+                // array: ['t1.id = t2.id', 'AND']
+                } elseif (is_array($val)) {
                     $nodes[] = 'HAVING ' . ($val[1] ?? 'AND') . " {$val[0]}";
                 }
             } elseif ($node === 'group') {
                 $nodes[] = 'GROUP BY ' . $this->qns($val);
             } elseif ($node === 'order') {
-                $nodes[] = 'ORDER BY ' . ($isString ? $val : \implode(' ', $val));
+                $nodes[] = 'ORDER BY ' . ($isString ? $val : implode(' ', $val));
                 continue;
             } else {
-                $nodes[] = \strtoupper($node) . ' ' . ($isString ? $val : \implode(',', (array)$val));
+                $nodes[] = strtoupper($node) . ' ' . ($isString ? $val : implode(',', (array)$val));
             }
-
         }
 
-        return \implode(' ', $nodes);
+        return implode(' ', $nodes);
     }
 }

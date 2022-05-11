@@ -1,31 +1,31 @@
-<?php
+<?php declare(strict_types=1);
 /**
- * Created by PhpStorm.
- * User: inhere
- * Date: 2017-11-03
- * Time: 10:11
+ * This file is part of Kite.
+ *
+ * @link     https://github.com/inhere
+ * @author   https://github.com/inhere
+ * @license  MIT
  */
 
-
-use PhpComp\LiteDb\LitePdo;
+use PhpComp\PdoX\PdoX;
 
 require dirname(__DIR__) . '/test/boot.php';
 
-$db = LitePdo::create([
-    'debug' => 1,
-    'host' => 'localhost',
-    'user' => 'root',
+$db = PdoX::create([
+    'debug'    => 1,
+    'host'     => 'localhost',
+    'user'     => 'root',
     'password' => 'password',
     'database' => 'test',
 ]);
 
-$db->on(LitePdo::CONNECT, function ($db) {
+$db->on(PdoX::CONNECT, function ($db): void {
     echo "connect database success\n";
 });
-$db->on(LitePdo::BEFORE_EXECUTE, function ($sql) {
+$db->on(PdoX::BEFORE_EXECUTE, function ($sql): void {
     echo "Will run SQL: $sql\n";
 });
-$db->on(LitePdo::DISCONNECT, function ($db) {
+$db->on(PdoX::DISCONNECT, function ($db): void {
     echo "disconnect database success\n";
 });
 
@@ -53,9 +53,9 @@ var_dump($ret);
 
 // find all
 // SQL: SELECT * FROM `user` WHERE `username` like ? LIMIT 1000
-$ret = $db->queryAll('user', [ ['username', 'like', '%tes%'] ], '*', [
+$ret = $db->queryAll('user', [['username', 'like', '%tes%']], '*', [
     'fetchType' => 'assoc',
-    'limit' => 10,
+    'limit'     => 10,
     'returnSql' => 1,
 ]);
 var_dump($ret);
@@ -64,9 +64,9 @@ var_dump($ret);
 // SQL: SELECT * FROM `user` WHERE `id` > ? ORDER BY createdAt ASC LIMIT 1000
 $ret = $db->queryAll('user', [['id', '>', 2]], '*', [
     'fetchType' => 'assoc',
-    'group' => 'username',
-    'order' => 'createdAt ASC',
-    'limit' => '2,,10',
+    'group'     => 'username',
+    'order'     => 'createdAt ASC',
+    'limit'     => '2,,10',
     'returnSql' => 1,
 ]);
 var_dump($ret);
@@ -79,7 +79,7 @@ $ret = $db->insert('user', [
 ]);
 var_dump($ret);
 
-$ret = $db->insertBatch('user',[
+$ret = $db->insertBatch('user', [
     [
         'username' => 'tom',
         'nickname' => 'tom-nick',
@@ -103,7 +103,7 @@ var_dump($ret);
 
 $ret = $db->delete('user', ['id' => 2], [
     'returnSql' => 1,
-    'limit' => 1,
+    'limit'     => 1,
 ]);
 var_dump($ret);
 

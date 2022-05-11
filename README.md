@@ -1,35 +1,35 @@
 # simple db client
 
-[![License](https://img.shields.io/packagist/l/php-comp/lite-db.svg?style=flat-square)](LICENSE)
-[![Php Version](https://img.shields.io/badge/php-%3E=7.0-brightgreen.svg?maxAge=2592000)](https://packagist.org/packages/php-comp/lite-db)
-[![Latest Stable Version](http://img.shields.io/packagist/v/php-comp/lite-db.svg)](https://packagist.org/packages/php-comp/lite-db)
+[![License](https://img.shields.io/packagist/l/phppkg/pdox.svg?style=flat-square)](LICENSE)
+[![Php Version](https://img.shields.io/badge/php-%3E=7.0-brightgreen.svg?maxAge=2592000)](https://packagist.org/packages/phppkg/pdox)
+[![Latest Stable Version](http://img.shields.io/packagist/v/phppkg/pdox.svg)](https://packagist.org/packages/phppkg/pdox)
 
 Simple database client for mysql,sqlite by PDO
 
-- **github** https://github.com/php-comp/lite-database.git
+- **github** https://github.com/phppkg/pdox.git
 
 ## Install
 
 - By composer require
 
 ```bash
-composer require php-comp/lite-db
+composer require phppkg/pdox
 ```
 
 - By composer.json
 
 ```json
 {
-    "require": {
-        "php-comp/lite-db": "~1.0.0"
-    }
+  "require": {
+    "phppkg/pdox": "~1.0.0"
+  }
 }
 ```
 
 - Pull directly
 
 ```bash
-git clone https://github.com/php-comp/lite-database.git
+git clone https://github.com/phppkg/pdox.git
 ```
 
 ## Usage
@@ -37,7 +37,9 @@ git clone https://github.com/php-comp/lite-database.git
 ### create connection
 
 ```php
-$db = LitePdo::create([
+use PhpComp\PdoX\PdoX;
+
+$db = PdoX::create([
     // open debug, will record query logs.
     'debug' => 1,
     
@@ -50,13 +52,13 @@ $db = LitePdo::create([
 
 // add event listeners.
 
-$db->on(LitePdo::CONNECT, function ($db) {
+$db->on(PdoX::CONNECT, function ($db) {
     echo "connect database success\n";
 });
-$db->on(LitePdo::BEFORE_EXECUTE, function ($sql) {
+$db->on(PdoX::BEFORE_EXECUTE, function ($sql) {
     echo "Will run SQL: $sql\n";
 });
-$db->on(LitePdo::DISCONNECT, function ($db) {
+$db->on(PdoX::DISCONNECT, function ($db) {
     echo "disconnect database success\n";
 });
 ```
@@ -181,86 +183,10 @@ var_dump($ret);
 var_dump($db->getQueryLogs());
 ```
 
-## mongoDB
-
-> un-completed
-
-### requirements
-
-- install php ext `pecl install mongodb`
-- install php lib 
-
-```bash
-composer require mongodb/mongodb
-```
-
-### create connection
-
-```php
-$mgo = LiteMongo::create([
-    'debug' => 1,
-    'server' => 'mongodb1.example.com:27317,mongodb2.example.com:27017/admin',
-    'user' => 'root',
-    'password' => 'password',
-    'database' => 'userDatabase',
-    // uriOptions
-    'uriOptions' => [],
-    // mongodb options
-    'driverOptions' => [],
-]);
-/*
- conn str example:
- mongodb://[username:password@]host1[:port1][,host2[:port2],...[,hostN[:portN]]][/[authDb][?options]]
- */
-```
-
-more see 
-
-- https://secure.php.net/manual/zh/mongodb-driver-manager.construct.php
-- https://docs.mongodb.com/php-library/current/
-
-add events listen:
-
-```php
-$db->on(LiteMongo::CONNECT, function ($db) {
-    echo "connect database success\n";
-});
-$db->on(LiteMongo::BEFORE_EXECUTE, function ($sql) {
-    echo "Will run SQL: $sql\n";
-});
-```
-
-### insert
-
-```php
-$result = $mgo->insert('collection', [
-    'col1' => 'val1'
-]);
-
-$manyResult = $mgo->insertBatch('collection', [
-    [
-        'username' => 'admin',
-        'email' => 'admin@example.com',
-        'name' => 'Admin User',
-    ],
-    [
-        'username' => 'test',
-        'email' => 'test@example.com',
-        'name' => 'Test User',
-    ],
-]);
-```
-
-### query
-
-```php
-$mgo->queryOne(['_id' => 'd4df6']);
-```
-
 ## Methods docs
 
-> https://inhere.github.io/php-lite-database/classes/master/Inhere/LiteDb/LitePdo.html
+> https://phppkg.github.io/pdox/classes/master/Inhere/PdoX/PdoX.html
 
-## License 
+## License
 
 MIT

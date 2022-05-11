@@ -1,7 +1,7 @@
 {
-  "name": "php-comp/lite-db",
+  "name": "phppkg/pdox",
   "type": "library",
-  "description": "a simple db tool library of the php",
+  "description": "a simple extended pdo tool library of the php",
   "keywords": [
     "library",
     "db",
@@ -11,24 +11,24 @@
     "mysql",
     "mongo"
   ],
-  "homepage": "https://github.com/php-comp/lite-database",
+  "homepage": "https://github.com/phppkg/pdox",
   "license": "MIT",
   "authors": [
     {
       "name": "inhere",
       "email": "in.798@qq.com",
-      "homepage": "http://www.yzone.net/"
+      "homepage": "http://github.com/inhere"
     }
   ],
   "require": {
-    "php": ">7.0.0"
+    "php": ">8.0.0"
   },
   "autoload": {
     "psr-4": {
-      "PhpComp\\LiteDb\\": "src/"
+      "PhpPkg\\PdoX\\": "src/"
     }
   },
   "suggest": {
-    "inhere/simple-print-tool": "Very lightweight data printing tools"
+    "phppkg/lorm": "Very lightweight active record orm package"
   }
 }

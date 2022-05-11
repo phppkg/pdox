@@ -1,22 +1,28 @@
-<?php
+<?php declare(strict_types=1);
 /**
- * Created by PhpStorm.
- * User: inhere
- * Date: 2017-12-14
- * Time: 12:02
+ * This file is part of Kite.
+ *
+ * @link     https://github.com/inhere
+ * @author   https://github.com/inhere
+ * @license  MIT
  */
 
-namespace PhpComp\LiteDb;
+namespace PhpComp\PdoX;
+
+use PhpComp\PdoX\Contract\DBXInterface;
+use function extension_loaded;
 
 /**
- * Class ExtendedMgo - for mongodb database
- * @package PhpComp\LiteDb
+ * Class MgoX - for mongodb database
+ *
+ * @package PhpComp\PdoX
  */
-class LiteMongo implements LiteDatabaseInterface
+class MgoX implements DBXInterface
 {
     use ConfigAndEventAwareTrait;
 
-    const DRIVER_MONGO = 'mongo';
+    const DRIVER_MONGO    = 'mongo';
+
     const DRIVER_MONGO_DB = 'mongodb';
 
     private $mgo;
@@ -25,23 +31,25 @@ class LiteMongo implements LiteDatabaseInterface
      * @var array
      */
     protected $config = [
-        'url' => '',
+        'url'      => '',
         'database' => ''
     ];
 
     /**
      * Is this driver supported.
+     *
      * @param string $driver
+     *
      * @return bool
      */
     public static function isSupported(string $driver): bool
     {
         if ($driver === self::DRIVER_MONGO_DB) {
-            return \extension_loaded('mongodb');
+            return extension_loaded('mongodb');
         }
 
         if ($driver === self::DRIVER_MONGO) {
-            return \extension_loaded('mongo');
+            return extension_loaded('mongo');
         }
 
         return false;
@@ -50,18 +58,17 @@ class LiteMongo implements LiteDatabaseInterface
     /**
      * connect
      */
-    public function connect()
+    public function connect(): void
     {
         if ($this->mgo) {
             return;
         }
-
     }
 
     /**
      * reconnect
      */
-    public function reconnect()
+    public function reconnect(): void
     {
         $this->mgo = null;
         $this->connect();
@@ -70,7 +77,7 @@ class LiteMongo implements LiteDatabaseInterface
     /**
      * disconnect
      */
-    public function disconnect()
+    public function disconnect(): void
     {
         $this->fire(self::DISCONNECT, [$this]);
         $this->mgo = null;
@@ -81,6 +88,6 @@ class LiteMongo implements LiteDatabaseInterface
      */
     public function isConnected(): bool
     {
-        return (bool) $this->mgo;
+        return (bool)$this->mgo;
     }
 }

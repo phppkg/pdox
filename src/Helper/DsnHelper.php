@@ -1,16 +1,24 @@
-<?php
+<?php declare(strict_types=1);
 /**
- * Created by PhpStorm.
- * User: Inhere
- * Date: 2016/3/2 0002
- * Time: 22:33
+ * This file is part of Kite.
+ *
+ * @link     https://github.com/inhere
+ * @author   https://github.com/inhere
+ * @license  MIT
  */
 
-namespace PhpComp\LiteDb\Helper;
+namespace PhpComp\PdoX\Helper;
+
+use InvalidArgumentException;
+use function str_replace;
+use function parse_ini_string;
+use function is_callable;
+use function strtr;
 
 /**
  * Class DsnHelper
- * @package PhpComp\LiteDb\Helper
+ *
+ * @package PhpComp\PdoX\Helper
  * @see http://php.net/manual/en/pdo.drivers.php
  * @link https://github.com/ventoviro/windwalker-database
  */
@@ -18,29 +26,34 @@ class DsnHelper
 {
     /**
      * Property options.
+     *
      * @var  array
      */
     private static $options = [];
 
     /**
      * extractDsn
-     * @param   string $dsn
+     *
+     * @param string $dsn
+     *
      * @return  array
      */
     public static function extractDsn(string $dsn): array
     {
         // Parse DSN to array
-        $dsn = \str_replace(';', "\n", $dsn);
+        $dsn = str_replace(';', "\n", $dsn);
 
-        return \parse_ini_string($dsn);
+        return parse_ini_string($dsn);
     }
 
     /**
      * getDsn
+     *
      * @param string $driver
      * @param array $options
-     * @throws \InvalidArgumentException
+     *
      * @return  string
+     * @throws InvalidArgumentException
      */
     public static function getDsn(array $options = [], $driver = null): string
     {
@@ -55,16 +68,16 @@ class DsnHelper
         }
 
         if (!$driver) {
-            throw new \InvalidArgumentException('The driver name is required.');
+            throw new InvalidArgumentException('The driver name is required.');
         }
 
-        if (!\is_callable([static::class, $driver])) {
-            throw new \InvalidArgumentException('The ' . $driver . ' driver is not supported.');
+        if (!is_callable([static::class, $driver])) {
+            throw new InvalidArgumentException('The ' . $driver . ' driver is not supported.');
         }
 
-        list($dsn, $replace) = static::$driver();
+        [$dsn, $replace] = static::$driver();
 
-        $dsn = \strtr($dsn, $replace);
+        $dsn = strtr($dsn, $replace);
 
         self::$options = [];
 
@@ -73,6 +86,7 @@ class DsnHelper
 
     /**
      * mysql
+     *
      * @return  array
      */
     protected static function mysql(): array
@@ -80,9 +94,9 @@ class DsnHelper
         return [
             'mysql:host={HOST};port={PORT};dbname={DBNAME};charset={CHARSET}',
             [
-                '{HOST}' => static::getOption('host', 'localhost'),
-                '{PORT}' => static::getOption('port', 3306),
-                '{DBNAME}' => static::getOption('database'),
+                '{HOST}'    => static::getOption('host', 'localhost'),
+                '{PORT}'    => static::getOption('port', 3306),
+                '{DBNAME}'  => static::getOption('database'),
                 '{CHARSET}' => static::getOption('charset', 'utf8')
             ]
         ];
@@ -90,6 +104,7 @@ class DsnHelper
 
     /**
      * cubrid
+     *
      * @return  array
      */
     protected static function cubrid(): array
@@ -97,8 +112,8 @@ class DsnHelper
         return [
             'cubrid:host={HOST};port={PORT};dbname={DBNAME}',
             [
-                '{HOST}' => static::getOption('host', 'localhost'),
-                '{PORT}' => static::getOption('port', 33000),
+                '{HOST}'   => static::getOption('host', 'localhost'),
+                '{PORT}'   => static::getOption('port', 33000),
                 '{DBNAME}' => static::getOption('database')
             ]
         ];
@@ -106,6 +121,7 @@ class DsnHelper
 
     /**
      * dblib
+     *
      * @return  array
      */
     protected static function dblib(): array
@@ -113,8 +129,8 @@ class DsnHelper
         return [
             'dblib:host={HOST};port={PORT};dbname={DBNAME}',
             [
-                '{HOST}' => static::getOption('host', 'localhost'),
-                '{PORT}' => static::getOption('port', 1433),
+                '{HOST}'   => static::getOption('host', 'localhost'),
+                '{PORT}'   => static::getOption('port', 1433),
                 '{DBNAME}' => static::getOption('database')
             ]
         ];
@@ -122,6 +138,7 @@ class DsnHelper
 
     /**
      * firebird
+     *
      * @return  array
      */
     protected static function firebird(): array
@@ -136,6 +153,7 @@ class DsnHelper
 
     /**
      * ibm
+     *
      * @return  array
      */
     protected static function ibm(): array
@@ -152,8 +170,8 @@ class DsnHelper
         return [
             'ibm:hostname={HOST};port={PORT};database={DBNAME}',
             [
-                '{HOST}' => static::getOption('host', 'localhost'),
-                '{PORT}' => static::getOption('port', 56789),
+                '{HOST}'   => static::getOption('host', 'localhost'),
+                '{PORT}'   => static::getOption('port', 56789),
                 '{DBNAME}' => static::getOption('database')
             ]
         ];
@@ -161,6 +179,7 @@ class DsnHelper
 
     /**
      * dblib
+     *
      * @return  array
      */
     protected static function informix(): array
@@ -177,10 +196,10 @@ class DsnHelper
         return [
             'informix:host={HOST};service={PORT};database={DBNAME};server={SERVER};protocol={PROTOCOL}',
             [
-                '{HOST}' => static::getOption('host', 'localhost'),
-                '{PORT}' => static::getOption('port', 1526),
-                '{DBNAME}' => static::getOption('database'),
-                '{SERVER}' => static::getOption('server'),
+                '{HOST}'     => static::getOption('host', 'localhost'),
+                '{PORT}'     => static::getOption('port', 1526),
+                '{DBNAME}'   => static::getOption('database'),
+                '{SERVER}'   => static::getOption('server'),
                 '{PROTOCOL}' => static::getOption('protocol')
             ]
         ];
@@ -188,6 +207,7 @@ class DsnHelper
 
     /**
      * mssql
+     *
      * @return  array
      */
     protected static function mssql(): array
@@ -195,8 +215,8 @@ class DsnHelper
         return [
             'mssql:host={HOST};port={PORT};dbname={DBNAME}',
             [
-                '{HOST}' => static::getOption('host', 'localhost'),
-                '{PORT}' => static::getOption('port', 1433),
+                '{HOST}'   => static::getOption('host', 'localhost'),
+                '{PORT}'   => static::getOption('port', 1433),
                 '{DBNAME}' => static::getOption('database')
             ]
         ];
@@ -204,6 +224,7 @@ class DsnHelper
 
     /**
      * oci
+     *
      * @return  array
      */
     protected static function oci(): array
@@ -212,7 +233,7 @@ class DsnHelper
             return [
                 'oci:dbname={DSN};charset={CHARSET}',
                 [
-                    '{DSN}' => $dsn,
+                    '{DSN}'     => $dsn,
                     '{CHARSET}' => static::getOption('charset', 'AL32UTF8')
                 ]
             ];
@@ -221,9 +242,9 @@ class DsnHelper
         return [
             'oci:dbname=//#HOST#:#PORT#/#DBNAME};charset={CHARSET}',
             [
-                '{HOST}' => static::getOption('host', 'localhost'),
-                '{PORT}' => static::getOption('port', 56789),
-                '{DBNAME}' => static::getOption('database'),
+                '{HOST}'    => static::getOption('host', 'localhost'),
+                '{PORT}'    => static::getOption('port', 56789),
+                '{DBNAME}'  => static::getOption('database'),
                 '{CHARSET}' => static::getOption('charset', 'AL32UTF8')
             ]
         ];
@@ -231,6 +252,7 @@ class DsnHelper
 
     /**
      * odbc
+     *
      * @return  array
      */
     protected static function odbc(): array
@@ -238,8 +260,8 @@ class DsnHelper
         return [
             'odbc:DSN={DSN};UID:#USER};PWD={PASSWORD}',
             [
-                '{HOST}' => static::getOption('host', 'localhost'),
-                '{USER}' => static::getOption('user', 1433),
+                '{HOST}'     => static::getOption('host', 'localhost'),
+                '{USER}'     => static::getOption('user', 1433),
                 '{PASSWORD}' => static::getOption('password')
             ]
         ];
@@ -247,6 +269,7 @@ class DsnHelper
 
     /**
      * pgsql
+     *
      * @return  array
      */
     protected static function pgsql(): array
@@ -254,8 +277,8 @@ class DsnHelper
         return [
             'pgsql:host={HOST};port={PORT};dbname={DBNAME}',
             [
-                '{HOST}' => static::getOption('host', 'localhost'),
-                '{PORT}' => static::getOption('port', 5432),
+                '{HOST}'   => static::getOption('host', 'localhost'),
+                '{PORT}'   => static::getOption('port', 5432),
                 '{DBNAME}' => static::getOption('database', 'postgres')
             ]
         ];
@@ -263,6 +286,7 @@ class DsnHelper
 
     /**
      * Alias of pgsql
+     *
      * @return  array
      */
     protected static function postgresql(): array
@@ -272,6 +296,7 @@ class DsnHelper
 
     /**
      * sqlite
+     *
      * @return  array
      */
     protected static function sqlite(): array
@@ -290,6 +315,7 @@ class DsnHelper
 
     /**
      * sybase
+     *
      * @return  array
      */
     protected static function sybase(): array
@@ -297,8 +323,8 @@ class DsnHelper
         return [
             'pgsql:host={HOST};port={PORT};dbname={DBNAME}',
             [
-                '{HOST}' => static::getOption('host', 'localhost'),
-                '{PORT}' => static::getOption('port', 1433),
+                '{HOST}'   => static::getOption('host', 'localhost'),
+                '{PORT}'   => static::getOption('port', 1433),
                 '{DBNAME}' => static::getOption('database')
             ]
         ];
@@ -306,6 +332,7 @@ class DsnHelper
 
     /**
      * sybase
+     *
      * @return  array
      */
     protected static function fourd(): array
@@ -313,7 +340,7 @@ class DsnHelper
         return [
             '4D:host={HOST};charset=UTF-8',
             [
-                '{HOST}' => static::getOption('host', 'localhost'),
+                '{HOST}'    => static::getOption('host', 'localhost'),
                 '{CHARSET}' => static::getOption('charset', 'UTF-8')
             ]
         ];
@@ -321,8 +348,10 @@ class DsnHelper
 
     /**
      * getOption
+     *
      * @param string $name
      * @param string $default
+     *
      * @return  mixed
      */
     protected static function getOption($name, $default = null)
@@ -330,4 +359,3 @@ class DsnHelper
         return self::$options[$name] ?? $default;
     }
 }
-

@@ -1,29 +1,33 @@
-<?php
+<?php declare(strict_types=1);
 /**
- * Created by PhpStorm.
- * User: Inhere
- * Date: 2017/12/15 0015
- * Time: 23:35
+ * This file is part of Kite.
+ *
+ * @link     https://github.com/inhere
+ * @author   https://github.com/inhere
+ * @license  MIT
  */
 
-namespace PhpComp\LiteDb;
+namespace PhpComp\PdoX\Contract;
 
 /**
  * Interface LiteDatabaseInterface
- * @package PhpComp\LiteDb
+ *
+ * @package PhpComp\PdoX\Contract
  */
-interface LiteDatabaseInterface
+interface DBXInterface
 {
     // events
-    const CONNECT = 'db.connect';
-    const DISCONNECT = 'db.disconnect';
+    public const CONNECT    = 'db.connect';
+
+    public const DISCONNECT = 'db.disconnect';
 
     // will provide ($sql, $type, $data)
     // $sql - executed SQL
     // $type - operate type.  e.g 'insert'
     // $data - data
-    const BEFORE_EXECUTE = 'db.beforeExecute';
-    const AFTER_EXECUTE = 'db.afterExecute';
+    public const BEFORE_EXECUTE = 'db.execute.before';
+
+    public const AFTER_EXECUTE  = 'db.execute.after';
 
     /**
      * connect to db server
@@ -47,8 +51,10 @@ interface LiteDatabaseInterface
 
     /**
      * Is this driver supported.
+     *
      * @param string $driver
+     *
      * @return bool
      */
-    public static function isSupported(string $driver): bool ;
+    public static function isSupported(string $driver): bool;
 }
